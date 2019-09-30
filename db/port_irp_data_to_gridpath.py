@@ -8301,6 +8301,7 @@ defaults = {
     "of_prm": 1,
     "of_local_capacity": 1,
     "of_elcc_surface": 1,
+    "of_tuning": 0,
     "temporal_scenario_id": 1,
     "load_zone_scenario_id": 1,
     "lf_reserves_up_ba_scenario_id": 1,
@@ -8356,7 +8357,7 @@ defaults = {
     "prm_requirement_scenario_id": 1,
     "elcc_surface_scenario_id": 1,
     "local_capacity_requirement_scenario_id": 1,
-    "tuning_scenario_id": 0,  # No tuning
+    "tuning_scenario_id": 'NULL',
     "solver_options_id": 1
 }
 
@@ -8389,6 +8390,7 @@ def create_base_scenarios():
         of_prm=defaults["of_prm"],
         of_local_capacity=defaults["of_local_capacity"],
         of_elcc_surface=defaults["of_elcc_surface"],
+        of_tuning=defaults["of_tuning"],
         temporal_scenario_id=defaults["temporal_scenario_id"],
         load_zone_scenario_id=defaults["load_zone_scenario_id"],
         lf_reserves_up_ba_scenario_id=
@@ -8506,6 +8508,7 @@ def create_base_scenarios():
         of_prm=defaults["of_prm"],
         of_local_capacity=defaults["of_local_capacity"],
         of_elcc_surface=defaults["of_elcc_surface"],
+        of_tuning=defaults["of_tuning"],
         temporal_scenario_id=defaults["temporal_scenario_id"],
         load_zone_scenario_id=defaults["load_zone_scenario_id"],
         lf_reserves_up_ba_scenario_id=
@@ -8623,6 +8626,7 @@ def create_base_scenarios():
         of_prm=defaults["of_prm"],
         of_local_capacity=defaults["of_local_capacity"],
         of_elcc_surface=defaults["of_elcc_surface"],
+        of_tuning=defaults["of_tuning"],
         temporal_scenario_id=defaults["temporal_scenario_id"],
         load_zone_scenario_id=defaults["load_zone_scenario_id"],
         lf_reserves_up_ba_scenario_id=
@@ -8738,6 +8742,7 @@ def create_base_scenarios():
         of_prm=defaults["of_prm"],
         of_local_capacity=defaults["of_local_capacity"],
         of_elcc_surface=defaults["of_elcc_surface"],
+        of_tuning=defaults["of_tuning"],
         temporal_scenario_id=defaults["temporal_scenario_id"],
         load_zone_scenario_id=defaults["load_zone_scenario_id"],
         lf_reserves_up_ba_scenario_id=
@@ -8853,6 +8858,7 @@ def create_base_scenarios():
         of_prm=defaults["of_prm"],
         of_local_capacity=0,
         of_elcc_surface=defaults["of_elcc_surface"],
+        of_tuning=defaults["of_tuning"],
         temporal_scenario_id=defaults["temporal_scenario_id"],
         load_zone_scenario_id=defaults["load_zone_scenario_id"],
         lf_reserves_up_ba_scenario_id=
@@ -8964,6 +8970,7 @@ def create_base_scenarios():
         of_prm=defaults["of_prm"],
         of_local_capacity=0,
         of_elcc_surface=defaults["of_elcc_surface"],
+        of_tuning=defaults["of_tuning"],
         temporal_scenario_id=defaults["temporal_scenario_id"],
         load_zone_scenario_id=defaults["load_zone_scenario_id"],
         lf_reserves_up_ba_scenario_id=
@@ -9075,6 +9082,7 @@ def create_base_scenarios():
         of_prm=defaults["of_prm"],
         of_local_capacity=0,
         of_elcc_surface=defaults["of_elcc_surface"],
+        of_tuning=defaults["of_tuning"],
         temporal_scenario_id=defaults["temporal_scenario_id"],
         load_zone_scenario_id=defaults["load_zone_scenario_id"],
         lf_reserves_up_ba_scenario_id=
@@ -9186,6 +9194,7 @@ def create_base_scenarios():
         of_prm=defaults["of_prm"],
         of_local_capacity=0,
         of_elcc_surface=defaults["of_elcc_surface"],
+        of_tuning=defaults["of_tuning"],
         temporal_scenario_id=defaults["temporal_scenario_id"],
         load_zone_scenario_id=defaults["load_zone_scenario_id"],
         lf_reserves_up_ba_scenario_id=
@@ -9297,6 +9306,7 @@ def create_base_scenarios():
         of_prm=defaults["of_prm"],
         of_local_capacity=0,
         of_elcc_surface=defaults["of_elcc_surface"],
+        of_tuning=defaults["of_tuning"],
         temporal_scenario_id=defaults["temporal_scenario_id"],
         load_zone_scenario_id=defaults["load_zone_scenario_id"],
         lf_reserves_up_ba_scenario_id=
@@ -9408,6 +9418,7 @@ def create_base_scenarios():
         of_prm=defaults["of_prm"],
         of_local_capacity=0,
         of_elcc_surface=defaults["of_elcc_surface"],
+        of_tuning=defaults["of_tuning"],
         temporal_scenario_id=defaults["temporal_scenario_id"],
         load_zone_scenario_id=defaults["load_zone_scenario_id"],
         lf_reserves_up_ba_scenario_id=
@@ -9521,6 +9532,7 @@ def create_base_scenarios():
         of_prm=defaults["of_prm"],
         of_local_capacity=defaults["of_local_capacity"],
         of_elcc_surface=defaults["of_elcc_surface"],
+        of_tuning=defaults["of_tuning"],
         temporal_scenario_id=defaults["temporal_scenario_id"],
         load_zone_scenario_id=defaults["load_zone_scenario_id"],
         lf_reserves_up_ba_scenario_id=
@@ -9636,6 +9648,7 @@ def create_base_scenarios():
         of_prm=defaults["of_prm"],
         of_local_capacity=defaults["of_local_capacity"],
         of_elcc_surface=defaults["of_elcc_surface"],
+        of_tuning=defaults["of_tuning"],
         temporal_scenario_id=defaults["temporal_scenario_id"],
         load_zone_scenario_id=defaults["load_zone_scenario_id"],
         lf_reserves_up_ba_scenario_id=
@@ -9751,6 +9764,7 @@ def create_base_scenarios():
         of_prm=defaults["of_prm"],
         of_local_capacity=defaults["of_local_capacity"],
         of_elcc_surface=defaults["of_elcc_surface"],
+        of_tuning=defaults["of_tuning"],
         temporal_scenario_id=defaults["temporal_scenario_id"],
         load_zone_scenario_id=defaults["load_zone_scenario_id"],
         lf_reserves_up_ba_scenario_id=
@@ -9865,6 +9879,7 @@ def create_base_scenarios():
         of_prm=defaults["of_prm"],
         of_local_capacity=defaults["of_local_capacity"],
         of_elcc_surface=defaults["of_elcc_surface"],
+        of_tuning=defaults["of_tuning"],
         temporal_scenario_id=defaults["temporal_scenario_id"],
         load_zone_scenario_id=defaults["load_zone_scenario_id"],
         lf_reserves_up_ba_scenario_id=
@@ -9979,6 +9994,7 @@ def create_base_scenarios():
         of_prm=defaults["of_prm"],
         of_local_capacity=defaults["of_local_capacity"],
         of_elcc_surface=defaults["of_elcc_surface"],
+        of_tuning=defaults["of_tuning"],
         temporal_scenario_id=defaults["temporal_scenario_id"],
         load_zone_scenario_id=defaults["load_zone_scenario_id"],
         lf_reserves_up_ba_scenario_id=
@@ -10093,6 +10109,7 @@ def create_base_scenarios():
         of_prm=defaults["of_prm"],
         of_local_capacity=defaults["of_local_capacity"],
         of_elcc_surface=defaults["of_elcc_surface"],
+        of_tuning=defaults["of_tuning"],
         temporal_scenario_id=defaults["temporal_scenario_id"],
         load_zone_scenario_id=defaults["load_zone_scenario_id"],
         lf_reserves_up_ba_scenario_id=
@@ -10209,6 +10226,7 @@ def create_2030_scenario():
         of_prm=defaults["of_prm"],
         of_local_capacity=0,
         of_elcc_surface=defaults["of_elcc_surface"],
+        of_tuning=defaults["of_tuning"],
         temporal_scenario_id=2,
         load_zone_scenario_id=defaults["load_zone_scenario_id"],
         lf_reserves_up_ba_scenario_id=
@@ -10320,6 +10338,7 @@ def create_2030_scenario():
         of_prm=defaults["of_prm"],
         of_local_capacity=0,
         of_elcc_surface=defaults["of_elcc_surface"],
+        of_tuning=defaults["of_tuning"],
         temporal_scenario_id=2,
         load_zone_scenario_id=defaults["load_zone_scenario_id"],
         lf_reserves_up_ba_scenario_id=
@@ -10517,3 +10536,4 @@ if __name__ == "__main__":
 
     # Vacuum
     io.execute("VACUUM")
+    io.close()

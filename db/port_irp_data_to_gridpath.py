@@ -10605,6 +10605,7 @@ def create_2030_scenario():
         of_prm=defaults["of_prm"],
         of_local_capacity=0,
         of_elcc_surface=defaults["of_elcc_surface"],
+        of_tuning=defaults["of_tuning"],
         temporal_scenario_id=3,
         load_zone_scenario_id=defaults["load_zone_scenario_id"],
         lf_reserves_up_ba_scenario_id=
@@ -10621,7 +10622,7 @@ def create_2030_scenario():
         rps_zone_scenario_id=defaults["rps_zone_scenario_id"],
         carbon_cap_zone_scenario_id=defaults["carbon_cap_zone_scenario_id"],
         prm_zone_scenario_id=defaults["prm_zone_scenario_id"],
-        local_capacity_zone_scenario_id='NULL',
+        local_capacity_zone_scenario_id=None,
         project_portfolio_scenario_id=2,
         project_operational_chars_scenario_id=
         defaults["project_operational_chars_scenario_id"],
@@ -10648,10 +10649,10 @@ def create_2030_scenario():
         project_prm_zone_scenario_id=defaults["project_prm_zone_scenario_id"],
         project_elcc_chars_scenario_id=
         defaults["project_elcc_chars_scenario_id"],
-        project_local_capacity_chars_scenario_id='NULL',
+        project_local_capacity_chars_scenario_id=None,
         prm_energy_only_scenario_id=
         defaults["prm_energy_only_scenario_id"],
-        project_local_capacity_zone_scenario_id='NULL',
+        project_local_capacity_zone_scenario_id=None,
         project_existing_capacity_scenario_id=
         defaults["project_existing_capacity_scenario_id"],
         project_existing_fixed_cost_scenario_id=
@@ -10690,9 +10691,9 @@ def create_2030_scenario():
         carbon_cap_target_scenario_id=1,
         prm_requirement_scenario_id=defaults["prm_requirement_scenario_id"],
         elcc_surface_scenario_id=defaults["elcc_surface_scenario_id"],
-        local_capacity_requirement_scenario_id='NULL',
+        local_capacity_requirement_scenario_id=None,
         tuning_scenario_id=defaults["tuning_scenario_id"],
-        solver_options_id='NULL'
+        solver_options_id=None
     )
 
 

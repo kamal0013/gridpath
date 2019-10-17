@@ -185,6 +185,7 @@ def load_temporal_data():
             subproblem_stage_timepoint_horizons=subproblem_stage_timepoint_horizons
     )
 
+
 def load_temporal_data_2030_only():
     """
     Add RESOLVE timepoints/days into database
@@ -1762,6 +1763,78 @@ def load_project_carbon_cap_zones():
     )
 
 
+def load_project_availability():
+    """
+
+    :return:
+    """
+    project_types_and_char_ids = dict()
+    all_projects = c2.execute(
+        "SELECT project FROM inputs_project_all;"
+    ).fetchall()
+    for prj in all_projects:
+        project_types_and_char_ids[prj[0]] = {}
+        project_types_and_char_ids[prj[0]]["type"] = "exogenous"
+        project_types_and_char_ids[prj[0]]["exogenous_availability_id"] = None
+        project_types_and_char_ids[prj[0]]["endogenous_availability_id"] = None
+
+    project_availability.make_scenario_and_insert_types_and_ids(
+        io=io, c=c2,
+        project_availability_scenario_id=1,
+        scenario_name="default",
+        scenario_description="Default availabilities.",
+        project_types_and_char_ids=project_types_and_char_ids
+    )
+
+    # Update the projects that are actually derated
+    project_avail_scenarios = {}
+
+    timepoints = c2.execute(
+        """SELECT timepoint, month FROM inputs_temporal_timepoints
+        WHERE temporal_scenario_id = {}
+        AND subproblem_id = {}
+        AND stage_id = {};""".format(1, 1, 1)
+    ).fetchall()
+
+    av_by_prj_month = OrderedDict()
+    with open(os.path.join("cpuc_irp_data", "csvs", "CONV_OpChar.csv"),
+              "r") as f:
+        rows_list = list(csv.reader(f))
+        for row in range(38 - 1, 44):
+            prj = rows_list[row][3 - 1]
+            c2.execute("""
+            UPDATE inputs_project_availability_types
+            SET exogenous_availability_scenario_id = 1
+            WHERE project = '{}';
+            """.format(prj))
+            av_by_prj_month[prj] = OrderedDict()
+            for column in range(6 - 1, 17):
+                month = int(float(rows_list[37 - 1][column]))
+                av_by_prj_month[prj][month] = float(rows_list[row][column])
+
+    avail_by_prj_tmp = OrderedDict()
+    for prj in av_by_prj_month.keys():
+        # exogenous_availability_scenario_id
+        project_avail_scenarios[prj] = {}
+        project_avail_scenarios[prj][1] = ("default", "default derate")
+
+        # Derates
+        avail_by_prj_tmp[prj] = OrderedDict()
+        avail_by_prj_tmp[prj][
+            1] = OrderedDict()  # exogenous_availability_scenario_id
+        avail_by_prj_tmp[prj][1][1] = OrderedDict()  # stage
+        for tmp_row in timepoints:
+            tmp = tmp_row[0]
+            month = tmp_row[1]
+            avail_by_prj_tmp[prj][1][1][tmp] = av_by_prj_month[prj][month]
+
+    project_availability.insert_project_availability_exogenous(
+        io=io, c=c2,
+        project_avail_scenarios=project_avail_scenarios,
+        project_avail=avail_by_prj_tmp
+    )
+
+
 def load_project_operational_chars():
     """
     Operational characteristics of projects
@@ -2887,48 +2960,6 @@ def load_project_hydro_opchar():
             io=io, c=c2,
             proj_opchar_names=proj_opchar_names,
             proj_horizon_chars=proj_horizon_chars
-    )
-
-
-def load_project_availability():
-    """
-    Project availabilty
-    :return:
-    """
-    timepoints = c2.execute(
-        """SELECT timepoint, month FROM inputs_temporal_timepoints
-        WHERE temporal_scenario_id = {}
-        AND subproblem_id = {}
-        AND stage_id = {};""".format(1, 1, 1)
-    ).fetchall()
-
-    av_by_prj_month = OrderedDict()
-    with open(os.path.join("cpuc_irp_data", "csvs", "CONV_OpChar.csv"), "r") as f:
-        rows_list = list(csv.reader(f))
-        for row in range(38 - 1, 44):
-            prj = rows_list[row][3 - 1]
-            av_by_prj_month[prj] = OrderedDict()
-            for column in range(6 - 1, 17):
-                month = int(float(rows_list[37 - 1][column]))
-                av_by_prj_month[prj][month] = float(rows_list[row][column])
-
-    avail_by_prj_tmp = OrderedDict()
-    for prj in av_by_prj_month.keys():
-        avail_by_prj_tmp[prj] = OrderedDict()
-        avail_by_prj_tmp[prj][1] = OrderedDict()  # stage
-        for tmp_row in timepoints:
-            tmp = tmp_row[0]
-            month = tmp_row[1]
-            avail_by_prj_tmp[prj][1][tmp] = \
-                av_by_prj_month[prj][month]
-
-    project_availability.update_project_availability(
-        io=io, c=c2,
-        project_availability_scenario_id=1,
-        scenario_name='default_maintenance_schedules_for_nuclear_and_coal',
-        scenario_description='Default maintenance schedules for nuclear and '
-                             'coal',
-        project_avail=avail_by_prj_tmp
     )
 
 
@@ -8492,6 +8523,7 @@ defaults = {
     "fuel_price_scenario_id": 5,  # 'Mid' fuel prices, 'Low' carbon adder
     "project_new_cost_scenario_id": 1,
     "project_new_potential_scenario_id": 7,  # DRECP/SJV w LCR proj limits
+    "project_new_binary_build_size_scenario_id": None,
     "transmission_portfolio_scenario_id": 1,
     "transmission_load_zone_scenario_id": 1,
     "transmission_existing_capacity_scenario_id": 1,
@@ -8605,6 +8637,8 @@ def create_base_scenarios():
         project_new_cost_scenario_id=defaults["project_new_cost_scenario_id"],
         project_new_potential_scenario_id=
         defaults["project_new_potential_scenario_id"],
+        project_new_binary_build_size_scenario_id=
+        defaults["project_new_binary_build_size_scenario_id"],
         transmission_portfolio_scenario_id=
         defaults["transmission_portfolio_scenario_id"],
         transmission_load_zone_scenario_id=
@@ -8723,6 +8757,8 @@ def create_base_scenarios():
         project_new_cost_scenario_id=defaults["project_new_cost_scenario_id"],
         project_new_potential_scenario_id=
         defaults["project_new_potential_scenario_id"],
+        project_new_binary_build_size_scenario_id=
+        defaults["project_new_binary_build_size_scenario_id"],
         transmission_portfolio_scenario_id=
         defaults["transmission_portfolio_scenario_id"],
         transmission_load_zone_scenario_id=
@@ -8840,6 +8876,8 @@ def create_base_scenarios():
         project_new_cost_scenario_id=defaults["project_new_cost_scenario_id"],
         project_new_potential_scenario_id=
         defaults["project_new_potential_scenario_id"],
+        project_new_binary_build_size_scenario_id=
+        defaults["project_new_binary_build_size_scenario_id"],
         transmission_portfolio_scenario_id=
         defaults["transmission_portfolio_scenario_id"],
         transmission_load_zone_scenario_id=
@@ -8956,6 +8994,8 @@ def create_base_scenarios():
         project_new_cost_scenario_id=defaults["project_new_cost_scenario_id"],
         project_new_potential_scenario_id=
         defaults["project_new_potential_scenario_id"],
+        project_new_binary_build_size_scenario_id=
+        defaults["project_new_binary_build_size_scenario_id"],
         transmission_portfolio_scenario_id=
         defaults["transmission_portfolio_scenario_id"],
         transmission_load_zone_scenario_id=
@@ -9069,6 +9109,8 @@ def create_base_scenarios():
         project_new_cost_scenario_id=defaults["project_new_cost_scenario_id"],
         project_new_potential_scenario_id=
         defaults["project_new_potential_scenario_id"],
+        project_new_binary_build_size_scenario_id=
+        defaults["project_new_binary_build_size_scenario_id"],
         transmission_portfolio_scenario_id=
         defaults["transmission_portfolio_scenario_id"],
         transmission_load_zone_scenario_id=
@@ -9181,6 +9223,8 @@ def create_base_scenarios():
         project_new_cost_scenario_id=defaults["project_new_cost_scenario_id"],
         project_new_potential_scenario_id=
         defaults["project_new_potential_scenario_id"],
+        project_new_binary_build_size_scenario_id=
+        defaults["project_new_binary_build_size_scenario_id"],
         transmission_portfolio_scenario_id=
         defaults["transmission_portfolio_scenario_id"],
         transmission_load_zone_scenario_id=
@@ -9293,6 +9337,8 @@ def create_base_scenarios():
         project_new_cost_scenario_id=defaults["project_new_cost_scenario_id"],
         project_new_potential_scenario_id=
         defaults["project_new_potential_scenario_id"],
+        project_new_binary_build_size_scenario_id=
+        defaults["project_new_binary_build_size_scenario_id"],
         transmission_portfolio_scenario_id=
         defaults["transmission_portfolio_scenario_id"],
         transmission_load_zone_scenario_id=
@@ -9405,6 +9451,8 @@ def create_base_scenarios():
         project_new_cost_scenario_id=defaults["project_new_cost_scenario_id"],
         project_new_potential_scenario_id=
         defaults["project_new_potential_scenario_id"],
+        project_new_binary_build_size_scenario_id=
+        defaults["project_new_binary_build_size_scenario_id"],
         transmission_portfolio_scenario_id=
         defaults["transmission_portfolio_scenario_id"],
         transmission_load_zone_scenario_id=
@@ -9517,6 +9565,8 @@ def create_base_scenarios():
         project_new_cost_scenario_id=defaults["project_new_cost_scenario_id"],
         project_new_potential_scenario_id=
         defaults["project_new_potential_scenario_id"],
+        project_new_binary_build_size_scenario_id=
+        defaults["project_new_binary_build_size_scenario_id"],
         transmission_portfolio_scenario_id=
         defaults["transmission_portfolio_scenario_id"],
         transmission_load_zone_scenario_id=
@@ -9629,6 +9679,8 @@ def create_base_scenarios():
         project_new_cost_scenario_id=defaults["project_new_cost_scenario_id"],
         project_new_potential_scenario_id=
         defaults["project_new_potential_scenario_id"],
+        project_new_binary_build_size_scenario_id=
+        defaults["project_new_binary_build_size_scenario_id"],
         transmission_portfolio_scenario_id=
         defaults["transmission_portfolio_scenario_id"],
         transmission_load_zone_scenario_id=
@@ -9746,6 +9798,8 @@ def create_base_scenarios():
         project_new_cost_scenario_id=defaults["project_new_cost_scenario_id"],
         project_new_potential_scenario_id=
         defaults["project_new_potential_scenario_id"],
+        project_new_binary_build_size_scenario_id=
+        defaults["project_new_binary_build_size_scenario_id"],
         transmission_portfolio_scenario_id=
         defaults["transmission_portfolio_scenario_id"],
         transmission_load_zone_scenario_id=
@@ -9862,6 +9916,8 @@ def create_base_scenarios():
         project_new_cost_scenario_id=defaults["project_new_cost_scenario_id"],
         project_new_potential_scenario_id=
         defaults["project_new_potential_scenario_id"],
+        project_new_binary_build_size_scenario_id=
+        defaults["project_new_binary_build_size_scenario_id"],
         transmission_portfolio_scenario_id=
         defaults["transmission_portfolio_scenario_id"],
         transmission_load_zone_scenario_id=
@@ -9977,6 +10033,8 @@ def create_base_scenarios():
         project_new_cost_scenario_id=defaults["project_new_cost_scenario_id"],
         project_new_potential_scenario_id=
         defaults["project_new_potential_scenario_id"],
+        project_new_binary_build_size_scenario_id=
+        defaults["project_new_binary_build_size_scenario_id"],
         transmission_portfolio_scenario_id=
         defaults["transmission_portfolio_scenario_id"],
         transmission_load_zone_scenario_id=
@@ -10092,6 +10150,8 @@ def create_base_scenarios():
         project_new_cost_scenario_id=defaults["project_new_cost_scenario_id"],
         project_new_potential_scenario_id=
         defaults["project_new_potential_scenario_id"],
+        project_new_binary_build_size_scenario_id=
+        defaults["project_new_binary_build_size_scenario_id"],
         transmission_portfolio_scenario_id=
         defaults["transmission_portfolio_scenario_id"],
         transmission_load_zone_scenario_id=
@@ -10207,6 +10267,8 @@ def create_base_scenarios():
         project_new_cost_scenario_id=defaults["project_new_cost_scenario_id"],
         project_new_potential_scenario_id=
         defaults["project_new_potential_scenario_id"],
+        project_new_binary_build_size_scenario_id=
+        defaults["project_new_binary_build_size_scenario_id"],
         transmission_portfolio_scenario_id=
         defaults["transmission_portfolio_scenario_id"],
         transmission_load_zone_scenario_id=
@@ -10322,6 +10384,8 @@ def create_base_scenarios():
         project_new_cost_scenario_id=defaults["project_new_cost_scenario_id"],
         project_new_potential_scenario_id=
         defaults["project_new_potential_scenario_id"],
+        project_new_binary_build_size_scenario_id=
+        defaults["project_new_binary_build_size_scenario_id"],
         transmission_portfolio_scenario_id=
         defaults["transmission_portfolio_scenario_id"],
         transmission_load_zone_scenario_id=
@@ -10437,6 +10501,8 @@ def create_2030_scenario():
         project_new_cost_scenario_id=defaults["project_new_cost_scenario_id"],
         project_new_potential_scenario_id=
         defaults["project_new_potential_scenario_id"],
+        project_new_binary_build_size_scenario_id=
+        defaults["project_new_binary_build_size_scenario_id"],
         transmission_portfolio_scenario_id=
         defaults["transmission_portfolio_scenario_id"],
         transmission_load_zone_scenario_id=
@@ -10549,6 +10615,8 @@ def create_2030_scenario():
         project_new_cost_scenario_id=defaults["project_new_cost_scenario_id"],
         project_new_potential_scenario_id=
         defaults["project_new_potential_scenario_id"],
+        project_new_binary_build_size_scenario_id=
+        defaults["project_new_binary_build_size_scenario_id"],
         transmission_portfolio_scenario_id=
         defaults["transmission_portfolio_scenario_id"],
         transmission_load_zone_scenario_id=
@@ -10661,6 +10729,8 @@ def create_2030_scenario():
         project_new_cost_scenario_id=defaults["project_new_cost_scenario_id"],
         project_new_potential_scenario_id=
         defaults["project_new_potential_scenario_id"],
+        project_new_binary_build_size_scenario_id=
+        defaults["project_new_binary_build_size_scenario_id"],
         transmission_portfolio_scenario_id=
         defaults["transmission_portfolio_scenario_id"],
         transmission_load_zone_scenario_id=

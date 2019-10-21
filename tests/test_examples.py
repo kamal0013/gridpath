@@ -47,6 +47,22 @@ class TestExamples(unittest.TestCase):
         self.assertAlmostEqual(expected_objective, actual_objective,
                                places=1)
 
+    def test_example_test_new_binary_build_storage(self):
+        """
+        Check objective function value of "test_new_binary_build_storage"
+        example
+        :return:
+        """
+        actual_objective = \
+            run_scenario.main(["--scenario", "test_new_binary_build_storage",
+                               "--scenario_location", EXAMPLES_DIRECTORY,
+                               "--quiet", "--mute_solver_output", "--testing"])
+
+        expected_objective = 102487.92
+
+        self.assertAlmostEqual(expected_objective, actual_objective,
+                               places=1)
+
     def test_example_test_new_build_storage_cumulative_min_max(self):
         """
         Check objective function value of
@@ -594,6 +610,24 @@ class TestExamples(unittest.TestCase):
             )
 
         expected_objective = 866735867.6799834
+
+        self.assertAlmostEqual(expected_objective, actual_objective,
+                               places=1)
+
+    def test_example_test_new_binary_solar(self):
+        """
+        Check objective function value of "test_new_binary_solar" example
+        :return:
+        """
+        actual_objective = \
+            run_scenario.main(
+                ["--scenario",
+                 "test_new_binary_solar",
+                 "--scenario_location", EXAMPLES_DIRECTORY,
+                 "--quiet", "--mute_solver_output", "--testing"]
+            )
+
+        expected_objective = 866736353.35
 
         self.assertAlmostEqual(expected_objective, actual_objective,
                                places=1)

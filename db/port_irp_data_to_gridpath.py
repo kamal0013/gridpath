@@ -8413,8 +8413,8 @@ def transmission_operational_chars():
         c2.execute(
             """INSERT INTO inputs_transmission_operational_chars
                (transmission_operational_chars_scenario_id,
-               transmission_line)
-               VALUES ({}, '{}');""".format(
+               transmission_line, operational_type)
+               VALUES ({}, '{}', 'simple_transmission');""".format(
                 transmission_operational_chars_scenario_id,
                 tx_line[0]
             )

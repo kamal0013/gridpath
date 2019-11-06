@@ -35,7 +35,7 @@ def parse_arguments(arguments):
                                               "no --scenario is specified.")
     parser.add_argument("--scenario", help="The scenario name. Required if "
                                            "no --scenario_id is specified.")
-    parser.add_argument("--load_zone", required=True, type=int,
+    parser.add_argument("--load_zone", required=True, type=str,
                         help="The name of the load zone. Required.")
     parser.add_argument("--subproblem", default=1, type=int,
                         help="The subproblem ID. Defaults to 1.")
@@ -48,10 +48,14 @@ def parse_arguments(arguments):
     return parsed_arguments
 
 
-def get_plotting_data(conn, scenario_id, load_zone, subproblem, stage):
+def get_plotting_data(conn, scenario_id, load_zone, subproblem, stage,
+                      **kwargs):
     """
     Get new capacity results by period/technology for a given
     scenario/load_zone/subproblem/stage.
+
+    **kwargs needed, so that an error isn't thrown when calling this
+    function with extra arguments from the UI.
     :param conn:
     :param scenario_id:
     :param load_zone:

@@ -48,6 +48,20 @@ reserve_type VARCHAR(32) PRIMARY KEY,
 description VARCHAR(128)
 );
 
+-- Implemented transmission operational types
+DROP TABLE IF EXISTS mod_tx_operational_types;
+CREATE TABLE mod_tx_operational_types (
+operational_type VARCHAR(32) PRIMARY KEY,
+description VARCHAR(128)
+);
+
+-- Implemented transmission capacity types
+DROP TABLE IF EXISTS mod_tx_capacity_types;
+CREATE TABLE mod_tx_capacity_types (
+capacity_type VARCHAR(32) PRIMARY KEY,
+description VARCHAR(128)
+);
+
 -- Invalid combinations of capacity type and operational type
 DROP TABLE IF EXISTS mod_capacity_and_operational_type_invalid_combos;
 CREATE TABLE mod_capacity_and_operational_type_invalid_combos (
@@ -56,6 +70,17 @@ operational_type VARCHAR (32),
 PRIMARY KEY (capacity_type, operational_type),
 FOREIGN KEY (capacity_type) REFERENCES mod_capacity_types (capacity_type),
 FOREIGN KEY (operational_type) REFERENCES mod_operational_types
+(operational_type)
+);
+
+-- Invalid combinations of tx capacity type and tx operational type
+DROP TABLE IF EXISTS mod_tx_capacity_and_tx_operational_type_invalid_combos;
+CREATE TABLE mod_tx_capacity_and_tx_operational_type_invalid_combos (
+capacity_type VARCHAR (32),
+operational_type VARCHAR (32),
+PRIMARY KEY (capacity_type, operational_type),
+FOREIGN KEY (capacity_type) REFERENCES mod_tx_capacity_types (capacity_type),
+FOREIGN KEY (operational_type) REFERENCES mod_tx_operational_types
 (operational_type)
 );
 
@@ -268,7 +293,9 @@ DROP TABLE IF EXISTS inputs_geography_load_zones;
 CREATE TABLE inputs_geography_load_zones (
 load_zone_scenario_id INTEGER,
 load_zone VARCHAR(32),
+allow_overgeneration INTEGER,
 overgeneration_penalty_per_mw FLOAT,
+allow_unserved_energy INTEGER,
 unserved_energy_penalty_per_mw FLOAT,
 PRIMARY KEY (load_zone_scenario_id, load_zone),
 FOREIGN KEY (load_zone_scenario_id) REFERENCES
@@ -290,6 +317,7 @@ DROP TABLE IF EXISTS inputs_geography_lf_reserves_up_bas;
 CREATE TABLE inputs_geography_lf_reserves_up_bas (
 lf_reserves_up_ba_scenario_id INTEGER,
 lf_reserves_up_ba VARCHAR(32),
+allow_violation INTEGER,
 violation_penalty_per_mw FLOAT,
 reserve_to_energy_adjustment FLOAT,
 PRIMARY KEY (lf_reserves_up_ba_scenario_id, lf_reserves_up_ba),
@@ -308,6 +336,7 @@ DROP TABLE IF EXISTS inputs_geography_lf_reserves_down_bas;
 CREATE TABLE inputs_geography_lf_reserves_down_bas (
 lf_reserves_down_ba_scenario_id INTEGER,
 lf_reserves_down_ba VARCHAR(32),
+allow_violation INTEGER,
 violation_penalty_per_mw FLOAT,
 reserve_to_energy_adjustment FLOAT,
 PRIMARY KEY (lf_reserves_down_ba_scenario_id, lf_reserves_down_ba),
@@ -326,6 +355,7 @@ DROP TABLE IF EXISTS inputs_geography_regulation_up_bas;
 CREATE TABLE inputs_geography_regulation_up_bas (
 regulation_up_ba_scenario_id INTEGER,
 regulation_up_ba VARCHAR(32),
+allow_violation INTEGER,
 violation_penalty_per_mw FLOAT,
 reserve_to_energy_adjustment FLOAT,
 PRIMARY KEY (regulation_up_ba_scenario_id, regulation_up_ba),
@@ -344,6 +374,7 @@ DROP TABLE IF EXISTS inputs_geography_regulation_down_bas;
 CREATE TABLE inputs_geography_regulation_down_bas (
 regulation_down_ba_scenario_id INTEGER,
 regulation_down_ba VARCHAR(32),
+allow_violation INTEGER,
 violation_penalty_per_mw FLOAT,
 reserve_to_energy_adjustment FLOAT,
 PRIMARY KEY (regulation_down_ba_scenario_id, regulation_down_ba),
@@ -362,6 +393,7 @@ DROP TABLE IF EXISTS inputs_geography_frequency_response_bas;
 CREATE TABLE inputs_geography_frequency_response_bas (
 frequency_response_ba_scenario_id INTEGER,
 frequency_response_ba VARCHAR(32),
+allow_violation INTEGER,
 violation_penalty_per_mw FLOAT,
 reserve_to_energy_adjustment FLOAT,
 PRIMARY KEY (frequency_response_ba_scenario_id, frequency_response_ba),
@@ -381,6 +413,7 @@ DROP TABLE IF EXISTS inputs_geography_spinning_reserves_bas;
 CREATE TABLE inputs_geography_spinning_reserves_bas (
 spinning_reserves_ba_scenario_id INTEGER,
 spinning_reserves_ba VARCHAR(32),
+allow_violation INTEGER,
 violation_penalty_per_mw FLOAT,
 reserve_to_energy_adjustment FLOAT,
 PRIMARY KEY (spinning_reserves_ba_scenario_id, spinning_reserves_ba),
@@ -402,6 +435,8 @@ DROP TABLE IF EXISTS inputs_geography_rps_zones;
 CREATE TABLE inputs_geography_rps_zones (
 rps_zone_scenario_id INTEGER,
 rps_zone VARCHAR(32),
+allow_violation INTEGER DEFAULT 0,  -- constraint is hard by default
+violation_penalty_per_mwh FLOAT DEFAULT 0,
 PRIMARY KEY (rps_zone_scenario_id, rps_zone),
 FOREIGN KEY (rps_zone_scenario_id) REFERENCES
 subscenarios_geography_rps_zones (rps_zone_scenario_id)
@@ -421,6 +456,8 @@ DROP TABLE IF EXISTS inputs_geography_carbon_cap_zones;
 CREATE TABLE inputs_geography_carbon_cap_zones (
 carbon_cap_zone_scenario_id INTEGER,
 carbon_cap_zone VARCHAR(32),
+allow_violation INTEGER DEFAULT 0,  -- constraint is hard by default
+violation_penalty_per_mmt FLOAT DEFAULT 0,
 PRIMARY KEY (carbon_cap_zone_scenario_id, carbon_cap_zone),
 FOREIGN KEY (carbon_cap_zone_scenario_id) REFERENCES
 subscenarios_geography_carbon_cap_zones (carbon_cap_zone_scenario_id)
@@ -440,6 +477,8 @@ DROP TABLE IF EXISTS inputs_geography_prm_zones;
 CREATE TABLE inputs_geography_prm_zones (
 prm_zone_scenario_id INTEGER,
 prm_zone VARCHAR(32),
+allow_violation INTEGER DEFAULT 0,  -- constraint is hard by default
+violation_penalty_per_mw FLOAT DEFAULT 0,
 PRIMARY KEY (prm_zone_scenario_id, prm_zone),
 FOREIGN KEY (prm_zone_scenario_id) REFERENCES
 subscenarios_geography_prm_zones (prm_zone_scenario_id)
@@ -459,7 +498,8 @@ DROP TABLE IF EXISTS inputs_geography_local_capacity_zones;
 CREATE TABLE inputs_geography_local_capacity_zones (
 local_capacity_zone_scenario_id INTEGER,
 local_capacity_zone VARCHAR(32),
-local_capacity_shortage_penalty_per_mw FLOAT,
+allow_violation INTEGER DEFAULT 0,  -- constraint is hard by default
+violation_penalty_per_mw FLOAT DEFAULT 0,
 PRIMARY KEY (local_capacity_zone_scenario_id, local_capacity_zone),
 FOREIGN KEY (local_capacity_zone_scenario_id) REFERENCES
 subscenarios_geography_local_capacity_zones (local_capacity_zone_scenario_id)
@@ -764,9 +804,9 @@ hydro_operational_chars_scenario_id INTEGER,
 balancing_type_project VARCHAR(64),
 horizon INTEGER,
 period INTEGER,
-average_power_mwa FLOAT,
-min_power_mw FLOAT,
-max_power_mw FLOAT,
+average_power_fraction FLOAT,
+min_power_fraction FLOAT,
+max_power_fraction FLOAT,
 PRIMARY KEY (project, hydro_operational_chars_scenario_id,
              balancing_type_project, horizon),
 FOREIGN KEY (project, hydro_operational_chars_scenario_id) REFERENCES
@@ -1387,6 +1427,8 @@ PRIMARY KEY (transmission_portfolio_scenario_id, transmission_line),
 FOREIGN KEY (transmission_portfolio_scenario_id) REFERENCES
 subscenarios_transmission_portfolios
 (transmission_portfolio_scenario_id)
+FOREIGN KEY (capacity_type) REFERENCES mod_tx_capacity_types
+(capacity_type)
 );
 
 -- Transmission geography
@@ -1499,8 +1541,6 @@ subscenarios_transmission_new_cost
 );
 
 -- Operational characteristics
--- This currently makes no difference, as we only have one operational type
--- for transmission
 DROP TABLE IF EXISTS subscenarios_transmission_operational_chars;
 CREATE TABLE subscenarios_transmission_operational_chars (
 transmission_operational_chars_scenario_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -1513,10 +1553,13 @@ CREATE TABLE inputs_transmission_operational_chars (
 transmission_operational_chars_scenario_id INTEGER,
 transmission_line VARCHAR(64),
 operational_type VARCHAR(32),
+reactance_ohms FLOAT,
 PRIMARY KEY (transmission_operational_chars_scenario_id, transmission_line),
 FOREIGN KEY (transmission_operational_chars_scenario_id) REFERENCES
 subscenarios_transmission_operational_chars
 (transmission_operational_chars_scenario_id)
+FOREIGN KEY (operational_type) REFERENCES mod_tx_operational_types
+(operational_type)
 );
 
 -- Hurdle rates
@@ -3115,6 +3158,7 @@ carbon_cap_mmt FLOAT,
 in_zone_project_emissions_mmt FLOAT,
 import_emissions_mmt FLOAT,
 total_emissions_mmt FLOAT,
+carbon_cap_overage_mmt FLOAT,
 import_emissions_mmt_degen FLOAT,
 total_emissions_mmt_degen FLOAT,
 dual FLOAT,
@@ -3138,6 +3182,7 @@ curtailed_rps_energy_mwh FLOAT,
 total_rps_energy_mwh FLOAT,
 fraction_of_rps_target_met FLOAT,
 fraction_of_rps_energy_curtailed FLOAT,
+rps_shortage_mwh FLOAT,
 dual FLOAT,
 rps_marginal_cost_per_mwh FLOAT,
 PRIMARY KEY (scenario_id, rps_zone, period, subproblem_id, stage_id)
@@ -3158,6 +3203,7 @@ prm_requirement_mw FLOAT,
 elcc_simple_mw FLOAT,
 elcc_surface_mw FLOAT,
 elcc_total_mw FLOAT,
+prm_shortage_mw FLOAT,
 dual FLOAT,
 prm_marginal_cost_per_mw FLOAT,
 PRIMARY KEY (scenario_id, prm_zone, period, subproblem_id, stage_id)
@@ -3175,6 +3221,7 @@ discount_factor FLOAT,
 number_years_represented FLOAT,
 local_capacity_requirement_mw FLOAT,
 local_capacity_provision_mw FLOAT,
+local_capacity_shortage_mw FLOAT,
 dual FLOAT,
 local_capacity_marginal_cost_per_mw FLOAT,
 PRIMARY KEY (scenario_id, local_capacity_zone, period, subproblem_id, stage_id)
@@ -3530,6 +3577,7 @@ rps_zone_form_control INTEGER,
 carbon_cap_zone_form_control INTEGER,
 period_form_control INTEGER,
 horizon_form_control INTEGER,
+subproblem_form_control INTEGER,
 stage_form_control INTEGER,
 project_form_control INTEGER
 );

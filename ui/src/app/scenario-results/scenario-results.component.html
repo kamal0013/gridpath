@@ -31,11 +31,9 @@
       </li>
       <ng-container *ngFor="let formGroup of allPlotFormGroups">
         <li class="form-group-list-item">
+          <div id="plotFormCaption">{{formGroup.value['caption']}}</div>
           <form [formGroup]="formGroup"
-                (ngSubmit)="showPlot(formGroup)">
-            <button type="submit" class="navbar-results-button">
-              {{formGroup.value['caption']}}
-            </button>
+                (ngSubmit)="showPlotOrDownloadData(formGroup)">
             <fieldset class="input-group-vertical">
               <div class="form-group">
                 <select class="custom-select" formControlName="loadZone"
@@ -73,6 +71,13 @@
                     <option>{{opt}}</option>
                   </ng-container>
                 </select>
+                <select class="custom-select" formControlName="subproblem"
+                        *ngIf="formGroup.value['subproblem'] !== 'default'">
+                  <ng-container
+                    *ngFor="let opt of formOptions.subproblemOptions">
+                    <option>{{opt}}</option>
+                  </ng-container>
+                </select>
                 <select class="custom-select" formControlName="stage"
                         *ngIf="formGroup.value['stage'] !== 'default'">
                   <ng-container
@@ -93,6 +98,12 @@
             Ymax (MW):
             <input type="text" formControlName="yMax">
             </label></p>
+            <button name="showPlot" type="submit"
+                    class="navbar-results-button">Show Plot
+            </button>
+            <button name="downloadData" type="submit"
+                class="navbar-results-button">Download Data
+            </button>
           </form>
         </li>
         </ng-container>

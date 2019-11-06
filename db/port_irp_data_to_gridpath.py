@@ -508,12 +508,12 @@ def load_geography_load_zones():
         scenario_description = '6 zones: CAISO, NW, SW, LDWP, BANC, IID',
         zones=['CAISO', 'NW', 'SW', 'LDWP', 'BANC', 'IID'],
         zone_overgen_penalties={
-            'CAISO': 50000, 'NW': 50000, 'SW': 50000, 'LDWP': 50000,
-            'BANC': 50000, 'IID': 50000
+            'CAISO': (1, 50000), 'NW': (1, 50000), 'SW': (1, 50000),
+            'LDWP': (1, 50000), 'BANC': (1, 50000), 'IID': (1, 50000)
         },
         zone_unserved_energy_penalties={
-            'CAISO': 50000, 'NW': 50000, 'SW': 50000, 'LDWP': 50000,
-            'BANC': 50000, 'IID': 50000
+            'CAISO': (1, 50000), 'NW': (1, 50000), 'SW': (1, 50000),
+            'LDWP': (1, 50000), 'BANC': (1, 50000), 'IID': (1, 50000)
         }
     )
 
@@ -531,7 +531,7 @@ def load_geography_lf_reserves_up_bas():
         scenario_name='default_caiso_only_pt2_reserve_to_energy_adj',
         scenario_description='CAISO only, no reserve-to-energy adjustment',
         bas=['CAISO'],
-        ba_penalties={'CAISO': 10000},
+        ba_penalties={'CAISO': (1, 10000)},
         reserve_to_energy_adjustments={'CAISO': 0.2}
     )
 
@@ -548,7 +548,7 @@ def load_geography_lf_reserves_down_bas():
         scenario_name='default_caiso_only_pt2_reserve_to_energy_adj',
         scenario_description='CAISO only, no reserve-to-energy adjustment',
         bas=['CAISO'],
-        ba_penalties={'CAISO': 10000},
+        ba_penalties={'CAISO': (1, 10000)},
         reserve_to_energy_adjustments={'CAISO': 0.2}
     )
 
@@ -565,7 +565,7 @@ def load_geography_regulation_up_bas():
         scenario_name='default_caiso_only_pt2_reserve_to_energy_adj',
         scenario_description='CAISO only, no reserve-to-energy adjustment',
         bas=['CAISO'],
-        ba_penalties={'CAISO': 10000},
+        ba_penalties={'CAISO': (1, 10000)},
         reserve_to_energy_adjustments={'CAISO': 0.2}
     )
 
@@ -582,7 +582,7 @@ def load_geography_regulation_down_bas():
         scenario_name='default_caiso_only_pt2_reserve_to_energy_adj',
         scenario_description='CAISO only, no reserve-to-energy adjustment',
         bas=['CAISO'],
-        ba_penalties={'CAISO': 10000},
+        ba_penalties={'CAISO': (1, 10000)},
         reserve_to_energy_adjustments={'CAISO': 0.2}
     )
 
@@ -599,7 +599,7 @@ def load_geography_spinning_reserves_bas():
         scenario_name='default_caiso_only_pt2_reserve_to_energy_adj',
         scenario_description='CAISO only, no reserve-to-energy adjustment',
         bas=['CAISO'],
-        ba_penalties={'CAISO': 10000},
+        ba_penalties={'CAISO': (1, 10000)},
         reserve_to_energy_adjustments={'CAISO': 0.2}
     )
 
@@ -616,7 +616,7 @@ def load_geography_frequency_response_bas():
         scenario_name='default_caiso_only_pt2_reserve_to_energy_adj',
         scenario_description='CAISO only, no reserve-to-energy adjustment',
         bas=['CAISO'],
-        ba_penalties={'CAISO': 10000},
+        ba_penalties={'CAISO': (1, 10000)},
         reserve_to_energy_adjustments={'CAISO': 0.2}
     )
 
@@ -631,7 +631,8 @@ def load_geography_rps_zones():
         rps_zone_scenario_id=1,
         scenario_name='caiso_rps',
         scenario_description='CAISO RPS only',
-        zones=['CAISO']
+        zones=['CAISO'],
+        zone_penalties={'CAISO': (0, 0)}
     )
 
 
@@ -645,7 +646,8 @@ def load_geography_carbon_cap_zones():
         carbon_cap_zone_scenario_id=defaults["carbon_cap_zone_scenario_id"],
         scenario_name='caiso_carbon_cap',
         scenario_description='CAISO carbon cap only',
-        zones=['CAISO']
+        zones=['CAISO'],
+        zone_penalties={'CAISO': (0, 0)}
     )
 
 
@@ -659,7 +661,8 @@ def load_geography_prm_zones():
         prm_zone_scenario_id=1,
         scenario_name='caiso_only_prm',
         scenario_description='CAISO PRM only',
-        zones=['CAISO']
+        zones=['CAISO'],
+        zone_penalties={'CAISO': (0, 0)}
     )
 
 
@@ -684,12 +687,19 @@ def load_geography_local_capacity_zones():
             'San_Diego',
             'Sierra',
             'Stockton'
-        ]
-    )
-
-    c2.execute(
-        """UPDATE inputs_geography_local_capacity_zones
-        SET local_capacity_shortage_penalty_per_mw = 1540000;"""
+        ],
+        zone_penalties = {
+            'Bay_Area': (1, 1540000),
+            'Big_Creek_Ventura': (1, 1540000),
+            'Fresno': (1, 1540000),
+            'Humboldt': (1, 1540000),
+            'Kern': (1, 1540000),
+            'LA_Basin': (1, 1540000),
+            'NCNB': (1, 1540000),
+            'San_Diego': (1, 1540000),
+            'Sierra': (1, 1540000),
+            'Stockton': (1, 1540000)
+        }
     )
     io.commit()
 
@@ -2902,7 +2912,7 @@ def load_project_hydro_opchar():
     Energy budget, min, and max by horizon for hydro projects
     :return:
     """
-
+    proj_capacities = dict()
     proj_opchar_names = dict()
     proj_horizon_chars = OrderedDict()
 
@@ -2910,6 +2920,11 @@ def load_project_hydro_opchar():
         # This will make a list of lists where each (sub)list is a row and
         # each element of the (sub)list is a column
         rows_list = list(csv.reader(f))
+
+        # Capacities
+        for column in range(5 - 1, 10):
+            proj_capacities[rows_list[4 - 1][column]] = \
+                float(rows_list[5 -1][column])
 
         # Hydro budgets
         for column in range(5 - 1, 10):
@@ -2933,7 +2948,8 @@ def load_project_hydro_opchar():
                     mwa = float(rows_list[row][column]) / 24  # MWh to MWa
                     proj_horizon_chars[proj][1]["day"][horizon]["period"] = \
                         period
-                    proj_horizon_chars[proj][1]["day"][horizon]["mwa"] = mwa
+                    proj_horizon_chars[proj][1]["day"][horizon]["avg"] = \
+                        mwa / proj_capacities[proj]
 
 
         # Min
@@ -2944,7 +2960,8 @@ def load_project_hydro_opchar():
                     day = int(float(rows_list[row][2 - 1]))
                     horizon = period * 10 ** 2 + day
                     min_mw = float(rows_list[row][column])
-                    proj_horizon_chars[proj][1]["day"][horizon]["min_mw"] = min_mw
+                    proj_horizon_chars[proj][1]["day"][horizon]["min"] = \
+                        min_mw / proj_capacities[proj]
         # Max
         for column in range(17 - 1, 22):
             proj = rows_list[14 - 1][column]
@@ -2953,7 +2970,8 @@ def load_project_hydro_opchar():
                     day = int(float(rows_list[row][2 - 1]))
                     horizon = period * 10 ** 2 + day
                     max_mw = float(rows_list[row][column])
-                    proj_horizon_chars[proj][1]["day"][horizon]["max_mw"] = max_mw
+                    proj_horizon_chars[proj][1]["day"][horizon]["max"] = \
+                        max_mw / proj_capacities[proj]
 
     # Insert data
     project_operational_chars.update_project_hydro_opchar(

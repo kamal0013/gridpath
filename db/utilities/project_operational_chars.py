@@ -240,15 +240,15 @@ def update_project_hydro_opchar(
                     inputs_data.append(
                         (p, scenario, bt, h,
                          proj_horizon_chars[p][scenario][bt][h]["period"],
-                         proj_horizon_chars[p][scenario][bt][h]["mwa"],
-                         proj_horizon_chars[p][scenario][bt][h]["min_mw"],
-                         proj_horizon_chars[p][scenario][bt][h]["max_mw"])
+                         proj_horizon_chars[p][scenario][bt][h]["average_power_fraction"],
+                         proj_horizon_chars[p][scenario][bt][h]["min_power_fraction"],
+                         proj_horizon_chars[p][scenario][bt][h]["max_power_fraction"])
                     )
     inputs_sql = """
         INSERT INTO inputs_project_hydro_operational_chars
         (project, hydro_operational_chars_scenario_id, 
         balancing_type_project, horizon, period, 
-        average_power_mwa, min_power_mw, max_power_mw)
+        average_power_fraction, min_power_fraction, max_power_fraction)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?);
         """
     spin_on_database_lock(conn=io, cursor=c, sql=inputs_sql, data=inputs_data)

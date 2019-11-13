@@ -323,10 +323,10 @@ def load_geography_load_zones():
         scenario_description = '1 zone: India',
         zones=['India'],
         zone_overgen_penalties={
-            'India': 50000
+            'India': (0, 50000)
         },
         zone_unserved_energy_penalties={
-            'India': 50000
+            'India': (0, 50000)
         }
     )
 
@@ -341,7 +341,10 @@ def load_geography_rps_zones():
         rps_zone_scenario_id=1,
         scenario_name='india_rps',
         scenario_description='INDIA RPS',
-        zones=['India']
+        zones=['India'],
+        zone_penalties={
+            'India': (0, 50000)
+        }
     )
 
 def create_loads():
@@ -682,10 +685,10 @@ def create_hydro_opchar():
     hydro_max_energy['average_daily_energy_mwh'] = hydro_max_energy.groupby(['month']).daily_energy_mwh.transform(mean)
     # Average power generation by dividing average daily energy by 24 hours
     hydro_max_energy['mwa'] = hydro_max_energy['average_daily_energy_mwh'] / 24
-    hydro_max_energy['average_power_fraction'] = hydro_max_energy['mwa'] / existing_projects_capacities.loc[
+    hydro_max_energy['avg'] = hydro_max_energy['mwa'] / existing_projects_capacities.loc[
         existing_projects_capacities['project'] == 'Existing_Hydro_Storage', 'existing_capacity_mw'].iloc[0]
     # drop duplicates and create average power generation by horizon dataframe
-    projects_hydro_horizon_chars = hydro_max_energy[['month', 'average_power_fraction']].drop_duplicates().reset_index(drop=True)
+    projects_hydro_horizon_chars = hydro_max_energy[['month', 'avg']].drop_duplicates().reset_index(drop=True)
 
 
     ## Hydro storage min generation
@@ -698,11 +701,11 @@ def create_hydro_opchar():
     # Minimum power generation by multiplying minimum generation capacity factor by rated capacity of hydro storage
     hydro_min_gen['min_power_mw'] = hydro_min_gen['average_min_generation_perc'] * existing_projects_capacities.loc[existing_projects_capacities['project'] == 'Existing_Hydro_Storage', 'existing_capacity_mw'].iloc[0]
     # drop duplicates and create average minimum power generation fraction by horizon dataframe
-    projects_hydro_horizon_chars['min_power_fraction'] = hydro_min_gen[['average_min_generation_perc']].drop_duplicates().reset_index(drop=True)
+    projects_hydro_horizon_chars['min'] = hydro_min_gen[['average_min_generation_perc']].drop_duplicates().reset_index(drop=True)
 
     ## Hydro storage max generation as rated capacity
     # projects_hydro_horizon_chars['max_mw'] = existing_projects_capacities.loc[existing_projects_capacities['project'] == 'Existing_Hydro_Storage', 'existing_capacity_mw'].iloc[0]
-    projects_hydro_horizon_chars['max_power_fraction'] = 1
+    projects_hydro_horizon_chars['max'] = 1
     projects_hydro_horizon_chars['project'] = 'Existing_Hydro_Storage'
 
     ## Write out the csv
@@ -1228,7 +1231,7 @@ def load_project_hydro_opchar():
             projects_hydro_horizon_chars_prj_p = pd.concat([projects_hydro_horizon_chars.loc[projects_hydro_horizon_chars['project'] == prj].set_index('month'), period_horizon.loc[period_horizon['period'] == p].set_index('horizonstep')], axis=1)
             projects_hydro_horizon_chars_prj = projects_hydro_horizon_chars_prj.append(projects_hydro_horizon_chars_prj_p, ignore_index=True)
 
-        projects_hydro_horizon_chars_prj = projects_hydro_horizon_chars_prj[['horizon', 'period', 'average_power_fraction', 'max_power_fraction', 'min_power_fraction']].set_index(['horizon'])
+        projects_hydro_horizon_chars_prj = projects_hydro_horizon_chars_prj[['horizon', 'period', 'avg', 'max', 'min']].set_index(['horizon'])
         projects_hydro_horizon_chars_prj_dict = OrderedDict()
         # TODO: Creating only a single scenario here. Modify code to accept multiple scenarios from input file
         hydro_operational_chars_scenario_id = 1
@@ -1374,9 +1377,6 @@ def load_project_new_costs():
     new_conventional_costs_all = pd.read_excel(new_projects_excel, sheet_name='new_conventional_costs')
     new_costs_scenarios = pd.read_excel(new_projects_excel, sheet_name='new_costs_scenarios')
 
-
-    # sc = 1
-
     for sc_id in new_costs_scenarios['new_costs_scenario_id'].to_list():
         new_battery_costs_scenario = new_costs_scenarios.loc[
             new_costs_scenarios['new_costs_scenario_id'] == sc_id, 'new_battery_costs_scenario'].iloc[0]
@@ -1425,7 +1425,7 @@ def load_project_new_costs():
                                                       'annualized_real_cost_per_kwh_yr']]
             project_period_lifetimes_costs[prj] = OrderedDict()
             for p in new_project_costs_prj['period'].to_list():
-                project_period_lifetimes_costs[prj][p] = (new_project_costs_prj.loc[new_project_costs_prj['period'] == p, 'lifetime_yrs'].iloc[0],
+                project_period_lifetimes_costs[prj][p] = (int(new_project_costs_prj.loc[new_project_costs_prj['period'] == p, 'lifetime_yrs'].iloc[0]),
                                                           new_project_costs_prj.loc[
                                                               new_project_costs_prj['period'] == p, 'annualized_real_cost_per_kw_yr'].iloc[0],
                                                           new_project_costs_prj.loc[
@@ -1773,6 +1773,7 @@ defaults = {
     "fuel_price_scenario_id": 1,
     "project_new_cost_scenario_id": 1,
     "project_new_potential_scenario_id": 1,
+    "project_new_binary_build_size_scenario_id": 'NULL',
     "transmission_portfolio_scenario_id": 'NULL',
     "transmission_load_zone_scenario_id": 'NULL',
     "transmission_existing_capacity_scenario_id": 'NULL',
@@ -1885,6 +1886,8 @@ def create_scenarios():
         project_new_cost_scenario_id=project_new_cost_scenario_id, # defaults["project_new_cost_scenario_id"]
         project_new_potential_scenario_id=
         defaults["project_new_potential_scenario_id"],
+        project_new_binary_build_size_scenario_id=
+        defaults["project_new_binary_build_size_scenario_id"],
         transmission_portfolio_scenario_id=
         defaults["transmission_portfolio_scenario_id"],
         transmission_load_zone_scenario_id=
@@ -1965,10 +1968,10 @@ options_solver()
 tuning()
 
 ### scenarios ###
-# RPS0_VRElow_SThigh_CONVhigh
-# RPS0_VREhigh_SThigh_CONVhigh
-# RPS0_VRElow_STlow_CONVhigh
-# RPS0_VREhigh_STlow_CONVhigh
+# RPS10_VRElow_SThigh_CONVhigh
+# RPS10_VREhigh_SThigh_CONVhigh
+# RPS10_VRElow_STlow_CONVhigh
+# RPS10_VREhigh_STlow_CONVhigh
 # RPS30_VRElow_SThigh_CONVhigh
 # RPS30_VREhigh_SThigh_CONVhigh
 # RPS30_VRElow_STlow_CONVhigh

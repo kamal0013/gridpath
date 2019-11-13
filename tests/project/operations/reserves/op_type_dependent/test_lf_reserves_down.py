@@ -22,7 +22,7 @@ PREREQUISITE_MODULE_NAMES = [
     "temporal.operations.timepoints", "temporal.operations.horizons",
     "temporal.investment.periods", "geography.load_zones",
     "geography.load_following_down_balancing_areas", "project",
-    "project.capacity.capacity",
+    "project.capacity.capacity", "project.availability.availability",
     "project.fuels", "project.operations",
     "project.operations.reserves.lf_reserves_down",
     "project.operations.operational_types"]
@@ -91,8 +91,10 @@ class TestLFReservesDownProvision(unittest.TestCase):
         # Param: lf_reserves_down_ramp_rate_limit (defaults to 1 if not
         # specified)
         expected_rr_limit = OrderedDict(sorted(
-            {"Battery": 1, "Battery_Specified": 1, "Gas_CCGT": 0.1,
-             "Gas_CCGT_New": 0.2, "Gas_CCGT_z2": 0.1, "Hydro": 0.2,
+            {"Battery": 1, "Battery_Binary": 1, "Battery_Specified": 1,
+             "Gas_CCGT": 0.1,
+             "Gas_CCGT_New": 0.2, "Gas_CCGT_New_Binary": 0.2,
+             "Gas_CCGT_z2": 0.1, "Hydro": 0.2,
              "Hydro_NonCurtailable": 0.2}.items()
         )
         )

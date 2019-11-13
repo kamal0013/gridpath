@@ -65,6 +65,7 @@ def create_scenario_all_args(
         fuel_price_scenario_id,
         project_new_cost_scenario_id,
         project_new_potential_scenario_id,
+        project_new_binary_build_size_scenario_id,
         transmission_portfolio_scenario_id,
         transmission_load_zone_scenario_id,
         transmission_existing_capacity_scenario_id,
@@ -148,6 +149,7 @@ def create_scenario_all_args(
     :param fuel_price_scenario_id:
     :param project_new_cost_scenario_id:
     :param project_new_potential_scenario_id:
+    :param project_new_binary_build_size_scenario_id:
     :param transmission_portfolio_scenario_id:
     :param transmission_load_zone_scenario_id:
     :param transmission_existing_capacity_scenario_id:
@@ -229,6 +231,7 @@ def create_scenario_all_args(
         fuel_price_scenario_id,
         project_new_cost_scenario_id,
         project_new_potential_scenario_id,
+        project_new_binary_build_size_scenario_id,
         transmission_portfolio_scenario_id,
         transmission_load_zone_scenario_id,
         transmission_existing_capacity_scenario_id,
@@ -307,6 +310,7 @@ def create_scenario_all_args(
         fuel_price_scenario_id,
         project_new_cost_scenario_id,
         project_new_potential_scenario_id,
+        project_new_binary_build_size_scenario_id,
         transmission_portfolio_scenario_id,
         transmission_load_zone_scenario_id,
         transmission_existing_capacity_scenario_id,
@@ -330,6 +334,7 @@ def create_scenario_all_args(
         tuning_scenario_id,
         solver_options_id
         ) VALUES (
+        ?,
         ?,
         ?,
         ?,
@@ -531,6 +536,25 @@ def delete_scenario(conn, scenario_id):
     Delete a scenario fully, i.e. delete from all results tables, status
     tables, and the scenarios table.
     """
+    # Delete results and statuses
+    delete_scenario_results(conn=conn, scenario_id=scenario_id)
+
+    # Delete from scenarios table
+    c = conn.cursor()
+    sc_id_sql = "DELETE FROM scenarios WHERE scenario_id = ?"
+    spin_on_database_lock(conn=conn, cursor=c, sql=sc_id_sql,
+                          data=(scenario_id,),
+                          many=False)
+
+
+def delete_scenario_results(conn, scenario_id):
+    """
+    :param conn:
+    :param scenario_id:
+    :return:
+
+    Delete scenario results and statuses from relevant tables.
+    """
     c = conn.cursor()
     all_tables = c.execute(
         "SELECT name FROM sqlite_master WHERE type='table';"
@@ -544,16 +568,20 @@ def delete_scenario(conn, scenario_id):
     ]
 
     # Delete from all results and status tables
-    tbls_data = []
     for tbl in results_tables + status_tables:
-        tbls_data.append((tbl,))
-    tbls_sql = """
-        DELETE FROM {} WHERE scenario_id = ?;
-        """.format(tbl, scenario_id)
-    spin_on_database_lock(conn=conn, cursor=c, sql=tbls_sql, data=tbls_data)
+        sql = """
+            DELETE FROM {} WHERE scenario_id = ?;
+            """.format(tbl)
+        spin_on_database_lock(conn=conn, cursor=c, sql=sql,
+                              data=(scenario_id,), many=False)
 
-    # Delete from scenarios table
-    sc_id_sql = "DELETE FROM scenarios WHERE scenario_id = ?"
-    spin_on_database_lock(conn=conn, cursor=c, sql=sc_id_sql,
-                          data=(scenario_id,),
-                          many=False)
+    # Update statuses in scenarios table to defaults
+    status_sql = """
+        UPDATE scenarios
+        SET validation_status_id=0,
+        run_status_id=0, 
+        run_process_id=NULL
+        WHERE scenario_id = ?
+    """
+    spin_on_database_lock(conn=conn, cursor=c, sql=status_sql,
+                          data=(scenario_id,), many=False)

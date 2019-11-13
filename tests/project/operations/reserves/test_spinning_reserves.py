@@ -88,8 +88,8 @@ class TestLFReservesUpProvision(unittest.TestCase):
 
         # Set: SPINNING_RESERVES_PROJECTS
         expected_projects = sorted([
-            "Gas_CCGT", "Gas_CCGT_New", "Gas_CCGT_z2", "Battery",
-            "Battery_Specified", "Hydro", "Hydro_NonCurtailable"
+            "Gas_CCGT", "Gas_CCGT_New", "Gas_CCGT_New_Binary", "Gas_CCGT_z2",
+            "Battery", "Battery_Binary", "Battery_Specified", "Hydro", "Hydro_NonCurtailable"
         ])
         actual_projects = sorted([
             prj for prj in instance.SPINNING_RESERVES_PROJECTS
@@ -99,7 +99,8 @@ class TestLFReservesUpProvision(unittest.TestCase):
         # Param: spinning_reserves_zone
         expected_reserves_zone = OrderedDict(sorted(
             {"Gas_CCGT": "Zone1", "Gas_CCGT_New": "Zone1",
-             "Gas_CCGT_z2": "Zone2", "Battery": "Zone1",
+             "Gas_CCGT_New_Binary": "Zone1",
+             "Gas_CCGT_z2": "Zone2", "Battery": "Zone1", "Battery_Binary": "Zone1",
              "Battery_Specified": "Zone1", "Hydro": "Zone1",
              "Hydro_NonCurtailable": "Zone1"}.items()
         )
@@ -123,9 +124,10 @@ class TestLFReservesUpProvision(unittest.TestCase):
 
         # Param: spinning_reserves_derate (defaults to 1 if not specified)
         expected_derate = OrderedDict(sorted(
-            {"Battery": 1, "Battery_Specified": 0.5, "Gas_CCGT": 1,
-             "Gas_CCGT_New": 1, "Gas_CCGT_z2": 1, "Hydro": 1,
-             "Hydro_NonCurtailable": 1}.items()
+            {"Battery": 1, "Battery_Binary": 1, "Battery_Specified": 0.5,
+             "Gas_CCGT": 1,
+             "Gas_CCGT_New": 1,  "Gas_CCGT_New_Binary": 1,
+             "Gas_CCGT_z2": 1, "Hydro": 1, "Hydro_NonCurtailable": 1}.items()
         )
         )
         actual_derate = OrderedDict(sorted(

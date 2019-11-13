@@ -87,7 +87,7 @@ class TestProjLocalCapacityInit(unittest.TestCase):
         # Set: LOCAL_CAPACITY_PROJECTS
         expected_projects = sorted([
             "Nuclear", "Gas_CCGT", "Coal", "Gas_CT",
-            "Gas_CCGT_New", "Gas_CT_New", "Battery",
+            "Gas_CCGT_New", "Gas_CCGT_New_Binary", "Gas_CT_New", "Battery", "Battery_Binary",
             "Battery_Specified", "Hydro",
             "Hydro_NonCurtailable", "Disp_Binary_Commit",
             "Disp_Cont_Commit", "Disp_No_Commit",
@@ -106,9 +106,11 @@ class TestProjLocalCapacityInit(unittest.TestCase):
                  "Gas_CCGT": "Local_Capacity_Zone1",
                  "Coal": "Local_Capacity_Zone2",
                  "Gas_CT": "Local_Capacity_Zone2",
-                 "Gas_CCGT_New": "Local_Capacity_Zone1", 
+                 "Gas_CCGT_New": "Local_Capacity_Zone1",
+                 "Gas_CCGT_New_Binary": "Local_Capacity_Zone1",
                  "Gas_CT_New": "Local_Capacity_Zone2",
                  "Battery": "Local_Capacity_Zone1",
+                 "Battery_Binary": "Local_Capacity_Zone1",
                  "Battery_Specified": "Local_Capacity_Zone2",
                  "Hydro": "Local_Capacity_Zone1",
                  "Hydro_NonCurtailable": "Local_Capacity_Zone2",
@@ -132,8 +134,8 @@ class TestProjLocalCapacityInit(unittest.TestCase):
         # Set: LOCAL_CAPACITY_PROJECTS_BY_LOCAL_CAPACITY_ZONE
         expected_projects_by_zone = {
             "Local_Capacity_Zone1": sorted([
-                "Nuclear", "Gas_CCGT", "Gas_CCGT_New",
-                "Battery", "Hydro", "Disp_Binary_Commit",
+                "Nuclear", "Gas_CCGT", "Gas_CCGT_New", "Gas_CCGT_New_Binary",
+                "Battery", "Battery_Binary", "Hydro", "Disp_Binary_Commit",
                 "Disp_No_Commit", "Nuclear_Flexible"
             ]),
             "Local_Capacity_Zone2": sorted([
@@ -160,7 +162,10 @@ class TestProjLocalCapacityInit(unittest.TestCase):
             ("Gas_CCGT", 2030), ("Coal", 2030), ("Gas_CT", 2030),
             ("Battery_Specified", 2020),
             ("Gas_CCGT_New", 2020), ("Gas_CCGT_New", 2030),
-            ("Gas_CT_New", 2030), ("Battery", 2020), ("Battery", 2030),
+            ("Gas_CCGT_New_Binary", 2020), ("Gas_CCGT_New_Binary", 2030),
+            ("Gas_CT_New", 2030),
+            ("Battery", 2020), ("Battery", 2030),
+            ("Battery_Binary", 2020), ("Battery_Binary", 2030),
             ("Hydro", 2020), ("Hydro", 2030),
             ("Hydro_NonCurtailable", 2020), ("Hydro_NonCurtailable", 2030),
             ("Disp_Binary_Commit", 2020), ("Disp_Binary_Commit", 2030),

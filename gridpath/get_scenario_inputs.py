@@ -12,7 +12,7 @@ import sys
 from db.common_functions import connect_to_database
 from gridpath.auxiliary.auxiliary import get_scenario_id_and_name
 from gridpath.common_functions import determine_scenario_directory, \
-    create_directory_if_not_exists
+    create_directory_if_not_exists, get_db_parser, get_scenario_location_parser
 from gridpath.auxiliary.module_list import determine_modules, load_modules
 from gridpath.auxiliary.scenario_chars import OptionalFeatures, SubScenarios, \
     SubProblems, SolverOptions
@@ -68,9 +68,10 @@ def write_model_inputs(scenario_directory, subproblems, loaded_modules,
             if not os.path.exists(inputs_directory):
                 os.makedirs(inputs_directory)
 
-            # Delete input files that may have existed before to avoid phantom
-            # inputs
-            delete_prior_inputs(inputs_directory)
+            # Delete auxiliary and input files that may have existed before to
+            # avoid phantom files/inputs
+            delete_prior_aux_files(scenario_directory=scenario_directory)
+            delete_prior_inputs(inputs_directory=inputs_directory)
 
             # Write model input .tab files for each of the loaded_modules if
             # appropriate. Note that all input files are saved in the
@@ -91,6 +92,24 @@ def write_model_inputs(scenario_directory, subproblems, loaded_modules,
                     pass
 
 
+def delete_prior_aux_files(scenario_directory):
+    """
+    Delete all auxiliary files that may exist in the scenario directory
+    :param scenario_directory: the scenario directory
+    :return:
+    """
+    prior_aux_files = [
+        "features.csv", "scenario_description.csv", "scenario_id.txt",
+        "solver_options.csv"
+    ]
+
+    for f in prior_aux_files:
+        if f in os.listdir(scenario_directory):
+            os.remove(os.path.join(scenario_directory, f))
+        else:
+            pass
+
+
 def delete_prior_inputs(inputs_directory):
     """
     Delete all .tab files that may exist in the specified directory
@@ -107,24 +126,16 @@ def delete_prior_inputs(inputs_directory):
 
 def parse_arguments(args):
     """
-    :param arguments: the script arguments specified by the user
+    :param args: the script arguments specified by the user
     :return: the parsed known argument values (<class 'argparse.Namespace'>
     Python object)
 
     Parse the known arguments.
     """
-    parser = ArgumentParser(add_help=True)
-    parser.add_argument("--database", help="The database file path.")
-    parser.add_argument("--scenario_id",
-                        help="The scenario_id from the database. Not needed "
-                             "if scenario_name is specified.")
-    parser.add_argument("--scenario",
-                        help="The scenario_name from the database. Not "
-                             "needed if scenario_id is specified.")
-    parser.add_argument("--scenario_location",
-                        help="The path to the directory in which to create "
-                             "the scenario directory. Defaults to "
-                             "'../scenarios' if not specified.")
+    parser = ArgumentParser(
+        add_help=True,
+        parents=[get_db_parser(), get_scenario_location_parser()]
+    )
     parsed_arguments = parser.parse_known_args(args=args)[0]
 
     return parsed_arguments

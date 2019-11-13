@@ -89,7 +89,8 @@ class TestProjPRMSimple(unittest.TestCase):
         expected_frac = OrderedDict(
             sorted(
                 {"Nuclear": 1, "Gas_CCGT": 1, "Coal": 1, "Gas_CT": 1,
-                 "Gas_CCGT_New": 1, "Gas_CT_New": 1, "Battery": 0.6,
+                 "Gas_CCGT_New": 1, "Gas_CCGT_New_Binary": 1, "Gas_CT_New": 1,
+                 "Battery": 0.6, "Battery_Binary": 0.6,
                  "Battery_Specified": 0.5, "Hydro": 0.5,
                  "Hydro_NonCurtailable": 1, "Disp_Binary_Commit": 1,
                  "Disp_Cont_Commit": 1, "Disp_No_Commit": 1,

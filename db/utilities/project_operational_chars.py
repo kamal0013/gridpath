@@ -210,8 +210,9 @@ def update_project_hydro_opchar(
     :param proj_horizon_chars:
         Nested dictionary: top-level key is the project name, second key is
         the balancing type, third key is the horizon, fourth-level keys are
-        'period' (the period of the horizon), 'mwa' (the energy budget (MWa)),
-        min_mw (minimum MW) and max_mw (maximum MW), with a value for each
+        'period' (the period of the horizon), 'avg' (the energy budget in avg
+        fraction of capacity), min (minimum as fraction of capacity) and max
+        (maximum as fraction of capacity), with a value for each
     :return:
     """
     print("project hydro operating characteristics")
@@ -240,9 +241,9 @@ def update_project_hydro_opchar(
                     inputs_data.append(
                         (p, scenario, bt, h,
                          proj_horizon_chars[p][scenario][bt][h]["period"],
-                         proj_horizon_chars[p][scenario][bt][h]["average_power_fraction"],
-                         proj_horizon_chars[p][scenario][bt][h]["min_power_fraction"],
-                         proj_horizon_chars[p][scenario][bt][h]["max_power_fraction"])
+                         proj_horizon_chars[p][scenario][bt][h]["avg"],
+                         proj_horizon_chars[p][scenario][bt][h]["min"],
+                         proj_horizon_chars[p][scenario][bt][h]["max"])
                     )
     inputs_sql = """
         INSERT INTO inputs_project_hydro_operational_chars

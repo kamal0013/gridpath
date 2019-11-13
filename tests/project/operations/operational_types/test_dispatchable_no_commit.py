@@ -21,7 +21,8 @@ TEST_DATA_DIRECTORY = \
 PREREQUISITE_MODULE_NAMES = [
     "temporal.operations.timepoints", "temporal.operations.horizons",
     "temporal.investment.periods", "geography.load_zones", "project",
-    "project.capacity.capacity", "project.fuels", "project.operations"]
+    "project.capacity.capacity", "project.availability.availability",
+    "project.fuels", "project.operations"]
 NAME_OF_MODULE_BEING_TESTED = \
     "project.operations.operational_types.dispatchable_no_commit"
 IMPORTED_PREREQ_MODULES = list()
@@ -107,6 +108,32 @@ class TestDispatchableNoCommitOperationalType(unittest.TestCase):
         )
         self.assertListEqual(expected_operational_timpoints_by_project,
                              actual_operational_timepoints_by_project)
+
+        # Param: dispatchable_no_commit_ramp_up_rate
+        expected_ramp_up_when_on_rate = {
+            "Disp_No_Commit": 1  # default value
+        }
+        actual_ramp_down_when_on_rate = {
+            prj: instance.dispatchable_no_commit_ramp_up_rate[
+                prj]
+            for prj in instance.DISPATCHABLE_NO_COMMIT_GENERATORS
+        }
+        self.assertDictEqual(expected_ramp_up_when_on_rate,
+                             actual_ramp_down_when_on_rate
+                             )
+
+        # Param: dispatchable_no_commit_ramp_down_rate
+        expected_ramp_down_when_on_rate = {
+            "Disp_No_Commit": 1  # default value
+        }
+        actual_ramp_down_when_on_rate = {
+            prj: instance.dispatchable_no_commit_ramp_down_rate[
+                prj]
+            for prj in instance.DISPATCHABLE_NO_COMMIT_GENERATORS
+        }
+        self.assertDictEqual(expected_ramp_down_when_on_rate,
+                             actual_ramp_down_when_on_rate
+                             )
 
 
 if __name__ == "__main__":

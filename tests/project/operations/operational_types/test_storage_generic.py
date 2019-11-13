@@ -21,7 +21,8 @@ TEST_DATA_DIRECTORY = \
 PREREQUISITE_MODULE_NAMES = [
      "temporal.operations.timepoints", "temporal.operations.horizons",
      "temporal.investment.periods", "geography.load_zones", "project",
-     "project.capacity.capacity", "project.fuels", "project.operations"]
+     "project.capacity.capacity", "project.availability.availability",
+    "project.fuels", "project.operations"]
 NAME_OF_MODULE_BEING_TESTED = \
     "project.operations.operational_types.storage_generic"
 IMPORTED_PREREQ_MODULES = list()
@@ -84,7 +85,7 @@ class TestStorageGenericOperationalType(unittest.TestCase):
         instance = m.create_instance(data)
 
         # Sets: STORAGE_GENERIC_PROJECTS
-        expected_projects = ["Battery", "Battery_Specified"]
+        expected_projects = ["Battery", "Battery_Binary", "Battery_Specified"]
         actual_projects = sorted(
             [p for p in instance.STORAGE_GENERIC_PROJECTS]
         )
@@ -102,7 +103,7 @@ class TestStorageGenericOperationalType(unittest.TestCase):
 
         # Param: storage_generic_charging_efficiency
         expected_charging_efficiency = {
-            "Battery": 0.8, "Battery_Specified": 0.8
+            "Battery": 0.8, "Battery_Binary": 0.8, "Battery_Specified": 0.8
         }
         actual_charging_efficiency = {
             prj: instance.storage_generic_charging_efficiency[prj]
@@ -113,7 +114,7 @@ class TestStorageGenericOperationalType(unittest.TestCase):
 
         # Param: storage_generic_discharging_efficiency
         expected_discharging_efficiency = {
-            "Battery": 0.8, "Battery_Specified": 0.8
+            "Battery": 0.8, "Battery_Binary": 0.8, "Battery_Specified": 0.8
         }
         actual_discharging_efficiency = {
             prj: instance.storage_generic_discharging_efficiency[prj]

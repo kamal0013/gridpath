@@ -86,9 +86,10 @@ class TestProjPRMInit(unittest.TestCase):
         # Check data are as expected
         # Set: PRM_PROJECTS
         expected_projects = sorted([
-            "Coal", "Coal_z2", "Gas_CCGT", "Gas_CCGT_New", "Gas_CCGT_z2",
+            "Coal", "Coal_z2", "Gas_CCGT", "Gas_CCGT_New",
+            "Gas_CCGT_New_Binary", "Gas_CCGT_z2",
             "Gas_CT", "Gas_CT_New", "Gas_CT_z2", "Nuclear", "Nuclear_z2",
-            "Wind", "Wind_z2", "Battery", "Battery_Specified", "Hydro",
+            "Wind", "Wind_z2", "Battery", "Battery_Binary", "Battery_Specified", "Hydro",
             'Hydro_NonCurtailable',
             "Disp_Binary_Commit", "Disp_Cont_Commit", "Disp_No_Commit",
             "Clunky_Old_Gen", "Clunky_Old_Gen2", "Nuclear_Flexible"]
@@ -102,11 +103,13 @@ class TestProjPRMInit(unittest.TestCase):
             sorted(
                 {"Coal": "PRM_Zone1", "Coal_z2": "PRM_Zone2",
                  "Gas_CCGT": "PRM_Zone1", "Gas_CCGT_New": "PRM_Zone1",
+                 "Gas_CCGT_New_Binary": "PRM_Zone1",
                  "Gas_CCGT_z2": "PRM_Zone2", "Gas_CT": "PRM_Zone1",
                  "Gas_CT_New": "PRM_Zone1", "Gas_CT_z2": "PRM_Zone2",
                  "Nuclear": "PRM_Zone1", "Nuclear_z2": "PRM_Zone2",
                  "Wind": "PRM_Zone1", "Wind_z2": "PRM_Zone2",
-                 "Battery": "PRM_Zone1", "Battery_Specified": "PRM_Zone1",
+                 "Battery": "PRM_Zone1", "Battery_Binary": "PRM_Zone1",
+                 "Battery_Specified": "PRM_Zone1",
                  "Hydro": "PRM_Zone1", 'Hydro_NonCurtailable': "PRM_Zone1",
                  "Disp_Binary_Commit": "PRM_Zone1",
                  "Disp_Cont_Commit": "PRM_Zone1", "Disp_No_Commit": "PRM_Zone1",
@@ -129,6 +132,7 @@ class TestProjPRMInit(unittest.TestCase):
                 {"Coal": "fully_deliverable", "Coal_z2": "fully_deliverable",
                  "Gas_CCGT": "fully_deliverable",
                  "Gas_CCGT_New": "fully_deliverable",
+                 "Gas_CCGT_New_Binary": "fully_deliverable",
                  "Gas_CCGT_z2": "fully_deliverable",
                  "Gas_CT": "fully_deliverable",
                  "Gas_CT_New": "fully_deliverable",
@@ -138,6 +142,7 @@ class TestProjPRMInit(unittest.TestCase):
                  "Wind": "energy_only_allowed",
                  "Wind_z2": "energy_only_allowed",
                  "Battery": "fully_deliverable_energy_limited",
+                 "Battery_Binary": "fully_deliverable_energy_limited",
                  "Battery_Specified": "fully_deliverable_energy_limited",
                  "Hydro": "fully_deliverable",
                  'Hydro_NonCurtailable': "fully_deliverable",
@@ -161,10 +166,10 @@ class TestProjPRMInit(unittest.TestCase):
         # Set: PRM_PROJECTS_BY_PRM_ZONE
         expected_projects_by_zone = {
             "PRM_Zone1": sorted([
-                "Coal", "Gas_CCGT", "Gas_CCGT_New",
+                "Coal", "Gas_CCGT", "Gas_CCGT_New", "Gas_CCGT_New_Binary",
                 "Gas_CT", "Gas_CT_New", "Nuclear",
-                "Wind", "Battery", "Battery_Specified", "Hydro",
-                'Hydro_NonCurtailable',
+                "Wind", "Battery", "Battery_Binary", "Battery_Specified", 
+                "Hydro", "Hydro_NonCurtailable",
                 "Disp_Binary_Commit", "Disp_Cont_Commit", "Disp_No_Commit",
                 "Clunky_Old_Gen", "Clunky_Old_Gen2", "Nuclear_Flexible"
             ]),
@@ -190,7 +195,10 @@ class TestProjPRMInit(unittest.TestCase):
             ("Nuclear_z2", 2030), ("Gas_CCGT_z2", 2030), ("Coal_z2", 2030),
             ("Gas_CT_z2", 2030), ("Wind_z2", 2030), ("Battery_Specified", 2020),
             ("Gas_CCGT_New", 2020), ("Gas_CCGT_New", 2030),
-            ("Gas_CT_New", 2030), ("Battery", 2020), ("Battery", 2030),
+            ("Gas_CCGT_New_Binary", 2020), ("Gas_CCGT_New_Binary", 2030),
+            ("Gas_CT_New", 2030),
+            ("Battery", 2020), ("Battery", 2030),
+            ("Battery_Binary", 2020), ("Battery_Binary", 2030),
             ("Hydro", 2020), ("Hydro", 2030),
             ("Hydro_NonCurtailable", 2020), ("Hydro_NonCurtailable", 2030),
             ("Disp_Binary_Commit", 2020), ("Disp_Binary_Commit", 2030),

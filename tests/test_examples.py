@@ -32,6 +32,21 @@ class TestExamples(unittest.TestCase):
         self.assertAlmostEqual(expected_objective, actual_objective,
                                places=1)
 
+    def test_example_test_no_overgen_allowed(self):
+        """
+        Check objective function value of "test_no_overgen_allowed" example
+        :return:
+        """
+        actual_objective = \
+            run_scenario.main(["--scenario", "test_no_overgen_allowed",
+                               "--scenario_location", EXAMPLES_DIRECTORY,
+                               "--quiet", "--mute_solver_output", "--testing"])
+
+        expected_objective = 1200069229.87995
+
+        self.assertAlmostEqual(expected_objective, actual_objective,
+                               places=1)
+
     def test_example_test_new_build_storage(self):
         """
         Check objective function value of "test_new_build_storage" example
@@ -43,6 +58,22 @@ class TestExamples(unittest.TestCase):
                                "--quiet", "--mute_solver_output", "--testing"])
 
         expected_objective = 102420.06359999996
+
+        self.assertAlmostEqual(expected_objective, actual_objective,
+                               places=1)
+
+    def test_example_test_new_binary_build_storage(self):
+        """
+        Check objective function value of "test_new_binary_build_storage"
+        example
+        :return:
+        """
+        actual_objective = \
+            run_scenario.main(["--scenario", "test_new_binary_build_storage",
+                               "--scenario_location", EXAMPLES_DIRECTORY,
+                               "--quiet", "--mute_solver_output", "--testing"])
+
+        expected_objective = 102487.92
 
         self.assertAlmostEqual(expected_objective, actual_objective,
                                places=1)
@@ -134,7 +165,34 @@ class TestExamples(unittest.TestCase):
                                "--scenario_location", EXAMPLES_DIRECTORY,
                                "--mute_solver_output", "--testing"])
 
-        expected_objective = 100062.36
+        expected_objective = 100062.55
+
+        self.assertAlmostEqual(expected_objective, actual_objective,
+                               places=1)
+
+    def test_example_2horizons_w_hydro_and_nuclear_binary_availability(self):
+        """
+        Check objective function value of
+        "2horizons_w_hydro_and_nuclear_binary_availability" example
+        :return:
+
+        NOTE: the objective function for this example is lower than that for
+        the '2horizons_w_hydro' example because of the unrealistically high
+        relative heat rate of the 'Nuclear' project relative to the gas
+        projects; allowing binary availability for a must-run project
+        actually allows lower-cost power when the nuclear plant is
+        unavailable. We should probably re-think this example as part of a
+        future more general revamp of the examples.
+        """
+        actual_objective = \
+            run_scenario.main(
+                ["--scenario",
+                 "2horizons_w_hydro_and_nuclear_binary_availability",
+                 "--quiet", "--scenario_location", EXAMPLES_DIRECTORY,
+                 "--mute_solver_output", "--testing"]
+            )
+
+        expected_objective = 81943.32
 
         self.assertAlmostEqual(expected_objective, actual_objective,
                                places=1)
@@ -363,15 +421,15 @@ class TestExamples(unittest.TestCase):
                                "--quiet", "--mute_solver_output", "--testing"])
 
         expected_objectives = {
-            1: {"da": 966735355.3466533,
-                "ha": 966735355.3466533,
-                "rt": 966735355.3466533},
-            2: {"da": 966735355.3466533,
-                "ha": 966735355.3466533,
-                "rt": 966735355.3466533},
-            3: {"da": 966735355.3466533,
-                "ha": 966735355.3466533,
-                "rt": 966735355.3466533}
+            1: {"da": 966735555.35,
+                "ha": 966735555.35,
+                "rt": 966735555.35},
+            2: {"da": 966735555.35,
+                "ha": 966735555.35,
+                "rt": 966735555.35},
+            3: {"da": 966735555.35,
+                "ha": 966735555.35,
+                "rt": 966735555.35}
         }
 
         for horizon in [1, 2, 3]:
@@ -566,7 +624,25 @@ class TestExamples(unittest.TestCase):
                  "--quiet", "--mute_solver_output", "--testing"]
             )
 
-        expected_objective = 866736555.0133034
+        expected_objective = 866735867.6799834
+
+        self.assertAlmostEqual(expected_objective, actual_objective,
+                               places=1)
+
+    def test_example_test_new_binary_solar(self):
+        """
+        Check objective function value of "test_new_binary_solar" example
+        :return:
+        """
+        actual_objective = \
+            run_scenario.main(
+                ["--scenario",
+                 "test_new_binary_solar",
+                 "--scenario_location", EXAMPLES_DIRECTORY,
+                 "--quiet", "--mute_solver_output", "--testing"]
+            )
+
+        expected_objective = 866736353.35
 
         self.assertAlmostEqual(expected_objective, actual_objective,
                                places=1)
@@ -656,6 +732,40 @@ class TestExamples(unittest.TestCase):
                                "--quiet", "--mute_solver_output", "--testing"])
 
         expected_objective = 114863176.928
+
+        self.assertAlmostEqual(expected_objective, actual_objective,
+                               places=0)
+
+    def test_example_test_tx_dcopf(self):
+        """
+        Check objective function value of "test_tx_dcopf"
+        example
+        :return:
+        """
+        actual_objective = \
+            run_scenario.main(["--scenario",
+                               "test_tx_dcopf",
+                               "--scenario_location", EXAMPLES_DIRECTORY,
+                               "--quiet", "--mute_solver_output", "--testing"])
+
+        expected_objective = 3100193282.07
+
+        self.assertAlmostEqual(expected_objective, actual_objective,
+                               places=0)
+
+    def test_example_test_tx_simple(self):
+        """
+        Check objective function value of "test_tx_simple"
+        example
+        :return:
+        """
+        actual_objective = \
+            run_scenario.main(["--scenario",
+                               "test_tx_simple",
+                               "--scenario_location", EXAMPLES_DIRECTORY,
+                               "--quiet", "--mute_solver_output", "--testing"])
+
+        expected_objective = 3100192148.07
 
         self.assertAlmostEqual(expected_objective, actual_objective,
                                places=0)

@@ -88,11 +88,13 @@ class TestFreqRespAgg(unittest.TestCase):
         instance = m.create_instance(data)
 
         # Set: FREQUENCY_RESPONSE_PROJECTS_OPERATIONAL_IN_TIMEPOINT
-        projects_2020 = sorted(["Gas_CCGT", "Gas_CCGT_New", "Gas_CCGT_z2",
-                                "Battery", "Battery_Specified", "Hydro",
+        projects_2020 = sorted(["Gas_CCGT", "Gas_CCGT_New",
+                                "Gas_CCGT_New_Binary", "Gas_CCGT_z2",
+                                "Battery", "Battery_Binary", "Battery_Specified", "Hydro",
                                 "Hydro_NonCurtailable"])
-        projects_2030 = sorted(["Gas_CCGT", "Gas_CCGT_New", "Gas_CCGT_z2",
-                                "Battery", "Hydro", "Hydro_NonCurtailable"])
+        projects_2030 = sorted(["Gas_CCGT", "Gas_CCGT_New",
+                                "Gas_CCGT_New_Binary", "Gas_CCGT_z2",
+                                "Battery", "Battery_Binary", "Hydro", "Hydro_NonCurtailable"])
         expected_projects = OrderedDict(sorted(
             {
                 20200101: projects_2020,
@@ -205,8 +207,10 @@ class TestFreqRespAgg(unittest.TestCase):
         self.assertDictEqual(expected_projects, actual_projects)
 
         # Set: FREQUENCY_RESPONSE_PARTIAL_PROJECTS_OPERATIONAL_IN_TIMEPOINT
-        pprojects_2020 = sorted(["Gas_CCGT", "Gas_CCGT_New", "Gas_CCGT_z2"])
-        pprojects_2030 = sorted(["Gas_CCGT", "Gas_CCGT_New", "Gas_CCGT_z2"])
+        pprojects_2020 = sorted(["Gas_CCGT", "Gas_CCGT_New",
+                                 "Gas_CCGT_New_Binary", "Gas_CCGT_z2"])
+        pprojects_2030 = sorted(["Gas_CCGT", "Gas_CCGT_New",
+                                 "Gas_CCGT_New_Binary", "Gas_CCGT_z2"])
         expected_pprojects = OrderedDict(sorted(
             {
                 20200101: pprojects_2020,

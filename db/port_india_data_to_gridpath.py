@@ -26,7 +26,7 @@ from db.utilities import temporal, geography, project_list, project_zones, \
     #port_data_to_gridpath_project_modules, port_data_to_gridpath_demand_modules
 
 ## MODULES FOR PORTING INDIA DATA TO SQL DATABASE
-from db.india_data_functions import port_data_to_gridpath_demand_modules, port_data_to_gridpath_project_modules
+#from db.india_data_functions import port_data_to_gridpath_demand_modules, port_data_to_gridpath_project_modules
 
 
 
@@ -1113,6 +1113,7 @@ def load_project_hr_curves():
         proj_heat_rate_curves_names_dict[prj] = OrderedDict()
 
         for scenario in projects_heatrate_curves['heat_rate_curves_scenario_id'].unique():
+            scenario = int(scenario)
             proj_heat_rate_curves_dict[prj][scenario] = OrderedDict()
 
             hr_curve_points_project = projects_heatrate_curves.loc[(projects_heatrate_curves['project'] == prj) & (projects_heatrate_curves['heat_rate_curves_scenario_id'] == scenario), 'heat_rate_curve_point'].to_list()
@@ -1986,7 +1987,7 @@ main_scenarios = pd.read_csv(main_scenarios_csv)
 for main_sc in main_scenarios['main_scenario_name'].to_list():
     if main_scenarios.loc[main_scenarios['main_scenario_name'] == main_sc, 'include'].iloc[0] == 1:
         project_new_cost_scenario_id = main_scenarios.loc[main_scenarios['main_scenario_name'] == main_sc, 'project_new_cost_scenario_id'].iloc[0]
-        rps_target_scenario_id = main_scenarios.loc[main_scenarios['main_scenario_name'] == main_sc, 'rps_target_scenario_id'].iloc[0]
+        rps_target_scenario_id = int(main_scenarios.loc[main_scenarios['main_scenario_name'] == main_sc, 'rps_target_scenario_id'].iloc[0])
         print(main_sc)
         create_scenarios()
 

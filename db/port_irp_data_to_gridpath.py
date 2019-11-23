@@ -6908,17 +6908,24 @@ def load_carbon_cap_targets():
 
             for column in range(5 - 1, 40):
                 period = int(float(rows_list[57 - 1][column]))
-                if scenario == 'Non_Binding':
-                    scenario_zone_period_targets[scenario]['CAISO'][period] \
-                        = 99
-                else:
-                    # Apply specified imports adder and convert to MMT
-                    target = (float(rows_list[row][column])
-                              + float(rows_list[69 - 1][column])) \
-                             * 10**-6
+                scenario_zone_period_targets[scenario]['CAISO'][period] = dict()
+                for subproblem in [1]:
+                    scenario_zone_period_targets[scenario]['CAISO'][
+                        period][subproblem] = dict()
+                    for stage in [1]:
+                        if scenario == 'Non_Binding':
+                            scenario_zone_period_targets[scenario]['CAISO'][
+                                period][subproblem][stage] \
+                                = 99
+                        else:
+                            # Apply specified imports adder and convert to MMT
+                            target = (float(rows_list[row][column])
+                                      + float(rows_list[69 - 1][column])) \
+                                     * 10**-6
 
-                    scenario_zone_period_targets[scenario]['CAISO'][period] = \
-                        target
+                            scenario_zone_period_targets[scenario]['CAISO'][
+                                period][subproblem][stage] = \
+                                target
 
     # From carbon_caps.xlsx
     additional_targets = {
@@ -7029,8 +7036,15 @@ def load_carbon_cap_targets():
         for zone in additional_targets[scenario].keys():
             scenario_zone_period_targets[scenario][zone] = OrderedDict()
             for period in additional_targets[scenario][zone].keys():
-                scenario_zone_period_targets[scenario][zone][period] = \
-                    additional_targets[scenario][zone][period]
+                scenario_zone_period_targets[scenario][zone][period] = dict()
+                for subproblem in [1]:
+                    scenario_zone_period_targets[scenario][zone][period][
+                        subproblem] = dict()
+                    for stage in [1]:
+                        scenario_zone_period_targets[scenario][zone][
+                            period][subproblem][stage] = \
+                            additional_targets[scenario][zone][period]
+
 
     # Insert data
     scenario_id = 1
@@ -7647,7 +7661,7 @@ def load_rps_targets():
     # )}
     # Make it non-zero to avoid division by 0 issues
     rps_0 = {
-        'CAISO': {yr: 100.0 for yr in range(2015, 2050 + 1)}
+        'CAISO': {yr: {1: {1: 100.0}} for yr in range(2015, 2050 + 1)}
     }
 
     rps_50 = {'CAISO': create_caiso_rps_target(
@@ -7848,18 +7862,22 @@ def create_caiso_rps_target(
 
     rps_target = OrderedDict()
     for year in range(2015, 2050 + 1):
-        rps_target[year] = (
-            baseline_forecast[year]
-            + ev_forecast[year]
-            + building_electrification_forecast[year]
-            - energy_efficiency_forecast[year]
-            - customer_pv_forecast[year]
-            - other_self_gen_forecast[year]
-            + tou_adjustment_forecast[year]
-            - pumping_loads_forecast[year]
-        ) * rps_percent_target[year] \
-            - nonmodeled_resources[year] \
-            - rps_bank[year]
+        rps_target[year] = OrderedDict()
+        for subproblem in [1]:
+            rps_target[year][subproblem] = OrderedDict()
+            for stage in [1]:
+                rps_target[year][subproblem][stage] = (
+                    baseline_forecast[year]
+                    + ev_forecast[year]
+                    + building_electrification_forecast[year]
+                    - energy_efficiency_forecast[year]
+                    - customer_pv_forecast[year]
+                    - other_self_gen_forecast[year]
+                    + tou_adjustment_forecast[year]
+                    - pumping_loads_forecast[year]
+                ) * rps_percent_target[year] \
+                    - nonmodeled_resources[year] \
+                    - rps_bank[year]
 
     return rps_target
 
@@ -8389,8 +8407,8 @@ def tuning():
     for subscenario in subscenarios:
         c2.execute(
             """INSERT INTO inputs_tuning
-            (tuning_scenario_id, import_carbon_tuning_cost, 
-            ramp_tuning_cost, dynamic_elcc_tuning_cost)
+            (tuning_scenario_id, import_carbon_tuning_cost_per_ton, 
+            ramp_tuning_cost_per_mw, dynamic_elcc_tuning_cost_per_mw)
             VALUES ({}, {}, {}, {});""".format(
                 subscenario[0], subscenario[3], subscenario[4], subscenario[5]
             )

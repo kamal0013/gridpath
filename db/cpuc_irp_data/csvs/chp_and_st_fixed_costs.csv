@@ -1,0 +1,3 @@
+project	fixed_cost_per_kw_yr, source
+CAISO_CHP, 10, Use CHP costs from https://www.wecc.biz/Reliability/2014_TEPPC_Generation_CapCost_Report_E3.pdf
+CAISO_ST, 35, Use coal steam costs from https://www.wecc.biz/Reliability/2014_TEPPC_Generation_CapCost_Report_E3.pdf

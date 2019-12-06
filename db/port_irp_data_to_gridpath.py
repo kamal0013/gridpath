@@ -48,7 +48,7 @@ def load_temporal_data():
     # Make a dictionary with the discount factor and number of years
     # represented for each investment period
     periods = dict(dict())
-    with open(os.path.join("cpuc_irp_data2", "csvs", "Lists.csv"), "r") as f:
+    with open(os.path.join("cpuc_irp_data", "csvs", "Lists.csv"), "r") as f:
         rows_list = list(csv.reader(f))
 
         for row in range(4 - 1, 7):
@@ -2091,6 +2091,7 @@ def load_project_operational_chars():
     project_hr_curve_id["CAISO_Peaker2_Planned"] = 1
     project_hr_curve_id["CAISO_CCGT1_Planned"] = 1
     project_hr_curve_id["CAISO_Reciprocating_Engine_Candidate"] = 1
+    # TODO: seems like this is a duplicate?
     project_hr_curve_id["CAISO_Peaker1_Planned"] = 1
     project_hr_curve_id["CAISO_Peaker2_Planned"] = 1
     project_hr_curve_id["CAISO_CCGT1_Planned"] = 1
@@ -2329,7 +2330,87 @@ def load_project_operational_chars():
                 )
     io.commit()
 
-    # ### Startup and shutdown costs ### #
+    # ### Min up and down time ### #
+    project_min_up_down_time = dict()
+    with open(os.path.join("cpuc_irp_data", "csvs", "CONV_OpChar.csv"),
+              "r") as f:
+        rows_list = list(csv.reader(f))
+        for row in range(8 - 1, 34):
+            if rows_list[row][3 - 1] == 'CAISO_Conventional_DR':
+                pass
+            # If Pmax=Pmin, we're modeling as must-run
+            elif float(rows_list[row][17 - 1]) == 1:
+                pass
+            # CAISO_Nuclear modeled as always-on
+            elif rows_list[row][3 - 1] == 'CAISO_Nuclear':
+                pass
+            else:
+                project_min_up_down_time[rows_list[row][3 - 1]] = \
+                    float(rows_list[row][21 - 1])
+
+        # Add GridPath split projects
+        project_min_up_down_time["CAISO_Peaker1_Planned"] = \
+            project_min_up_down_time["CAISO_Peaker1"]
+        project_min_up_down_time["CAISO_Peaker2_Planned"] = \
+            project_min_up_down_time["CAISO_Peaker2"]
+        project_min_up_down_time["CAISO_CCGT1_Planned"] = \
+            project_min_up_down_time["CAISO_CCGT1"]
+        project_min_up_down_time["CAISO_Reciprocating_Engine_Candidate"] = \
+            project_min_up_down_time["CAISO_Reciprocating_Engine"]
+
+    project_operational_chars.update_project_opchar_column(
+        io=io, c=c2,
+        project_operational_chars_scenario_id=1,
+        column="min_up_time_hours",
+        project_char=project_min_up_down_time
+    )
+
+    project_operational_chars.update_project_opchar_column(
+        io=io, c=c2,
+        project_operational_chars_scenario_id=1,
+        column="min_down_time_hours",
+        project_char=project_min_up_down_time
+    )
+
+    # Add disaggregated gas projects
+    with open(os.path.join("cpuc_irp_data", "gridpath_specific",
+                           "gas_disagg_plants.csv"),
+              "r") as f:
+        reader = csv.reader(f, delimiter=",")
+        next(reader)
+        for row in reader:
+            if row[0].startswith('Battery'):
+                pass
+            else:
+                type = c2.execute(
+                    """SELECT operational_type FROM
+                    inputs_project_operational_chars
+                    WHERE project_operational_chars_scenario_id = 1
+                    AND project = '{}'""".format(row[0])
+                ).fetchone()[0]
+                if type == 'must_run':
+                    pass
+                else:
+                    tech = c2.execute(
+                        """SELECT technology FROM inputs_project_operational_chars
+                        WHERE project_operational_chars_scenario_id = 1
+                        AND project = '{}'""".format(row[0])
+                    ).fetchone()[0]
+
+                    c2.execute(
+                        """UPDATE inputs_project_operational_chars
+                        SET min_up_time_hours = {}, min_down_time_hours = {}
+                        WHERE project = '{}'
+                        AND project_operational_chars_scenario_id = 1;""".format(
+                            6.0 if tech == 'CCGT' else 1.0,
+                            6.0 if tech == 'CCGT' else 1.0,
+                            row[0]
+                        )
+                    )
+
+    io.commit()
+
+    # ### Shutdown costs ### #
     # Costs in CONV_OpChar are divided by 2 in Inputs2Write
     project_startup_shutdown_cost = dict()
     with open(os.path.join("cpuc_irp_data", "csvs", "CONV_OpChar.csv"), "r") as f:
@@ -2360,13 +2441,6 @@ def load_project_operational_chars():
     project_operational_chars.update_project_opchar_column(
         io=io, c=c2,
         project_operational_chars_scenario_id=1,
-        column="startup_cost_per_mw",
-        project_char=project_startup_shutdown_cost
-    )
-
-    project_operational_chars.update_project_opchar_column(
-        io=io, c=c2,
-        project_operational_chars_scenario_id=1,
         column="shutdown_cost_per_mw",
         project_char=project_startup_shutdown_cost
     )
@@ -2390,13 +2464,163 @@ def load_project_operational_chars():
                 else:
                     c2.execute(
                         """UPDATE inputs_project_operational_chars
-                        SET startup_cost_per_mw = {},
                         shutdown_cost_per_mw = {}
                         WHERE project = '{}'
                         AND project_operational_chars_scenario_id = 1;""".format(
-                            row[7], row[8], row[0]
+                            row[8], row[0]
                         )
                     )
+    io.commit()
+
+    # ### Startup Chars ### #
+    # 1. Assign a startup_chars_scenario_id to all startup projects
+    startup_chars_scenario_id = dict()
+    with open(os.path.join("cpuc_irp_data", "csvs", "CONV_OpChar.csv"), "r") as f:
+        rows_list = list(csv.reader(f))
+        for row in range(8 - 1, 34):
+            if rows_list[row][3 - 1] == 'CAISO_Conventional_DR':
+                pass
+            # If Pmax=Pmin, assign 0 to min input and heat rate at Pmax
+            else:
+                startup_chars_scenario_id[rows_list[row][3 - 1]] = 1
+
+    # Gridpath split projects
+    startup_chars_scenario_id["CAISO_Peaker1_Planned"] = 1
+    startup_chars_scenario_id["CAISO_Peaker2_Planned"] = 1
+    startup_chars_scenario_id["CAISO_CCGT1_Planned"] = 1
+    startup_chars_scenario_id["CAISO_Reciprocating_Engine_Candidate"] = 1
+
+    # Add disaggregated gas projects
+    with open(os.path.join("cpuc_irp_data", "gridpath_specific",
+                           "gas_disagg_plants.csv"),
+              "r") as f:
+        reader = csv.reader(f, delimiter=",")
+        next(reader)
+        for row in reader:
+            if row[0].startswith('Battery'):
+                pass
+            else:
+                startup_chars_scenario_id[row[0]] = 1
+
+    project_operational_chars.update_project_opchar_column(
+        io, c2, 1, 'startup_chars_scenario_id', startup_chars_scenario_id
+    )
+
+    # 2. Create startup_scenarios for each project in startup_names variable
+    # which is used in update_project_startup_chars
+    startup_names = {
+        'CAISO_CHP': {1: ('default', 'default')},
+        'CAISO_Nuclear': {1: ('default', 'default')},
+        'CAISO_CCGT1': {1: ('default', 'default')},
+        'CAISO_CCGT2': {1: ('default', 'default')},
+        'CAISO_Peaker1': {1: ('default', 'default')},
+        'CAISO_Peaker2': {1: ('default', 'default')},
+        'CAISO_Advanced_CCGT': {1: ('default', 'default')},
+        'CAISO_Aero_CT': {1: ('default', 'default')},
+        'CAISO_Reciprocating_Engine': {1: ('default', 'default')},
+        'CAISO_ST': {1: ('default', 'default')},
+        'NW_Nuclear': {1: ('default', 'default')},
+        'NW_Coal': {1: ('default', 'default')},
+        'NW_CCGT': {1: ('default', 'default')},
+        'NW_Peaker': {1: ('default', 'default')},
+        'SW_Nuclear': {1: ('default', 'default')},
+        'SW_Coal': {1: ('default', 'default')},
+        'SW_CCGT': {1: ('default', 'default')},
+        'SW_Peaker': {1: ('default', 'default')},
+        'LDWP_Nuclear': {1: ('default', 'default')},
+        'LDWP_Coal': {1: ('default', 'default')},
+        'LDWP_CCGT': {1: ('default', 'default')},
+        'LDWP_Peaker': {1: ('default', 'default')},
+        'IID_CCGT': {1: ('default', 'default')},
+        'IID_Peaker': {1: ('default', 'default')},
+        'BANC_CCGT': {1: ('default', 'default')},
+        'BANC_Peaker': {1: ('default', 'default')},
+        'CAISO_Peaker1_Planned': {1: ('default', 'default')},
+        'CAISO_Peaker2_Planned': {1: ('default', 'default')},
+        'CAISO_CCGT1_Planned': {1: ('default', 'default')},
+        'CAISO_Reciprocating_Engine_Candidate': {1: ('default', 'default')}
+    }
+
+    # Add disaggregated gas projects
+    with open(os.path.join("cpuc_irp_data", "gridpath_specific",
+                           "gas_disagg_plants.csv"),
+              "r") as f:
+        reader = csv.reader(f, delimiter=",")
+        next(reader)
+        for row in reader:
+            if row[0].startswith('Battery'):
+                pass
+            else:
+                startup_names[row[0]] = {1: ('default', 'default')}
+
+    # 3. The startup char dicts, based on 2 different files:
+    #  one is the conv_opchar.csv, and one is gas_disagg_plants.csv
+    startup_char_dict = dict()
+    with open(os.path.join("cpuc_irp_data", "csvs",
+                           "CONV_OpChar.csv"),
+              "r") as f:
+        rows_list = list(csv.reader(f))
+        for row in range(8 - 1, 34):
+            project = rows_list[row][3 - 1]
+            if project.startswith('Battery') or project == \
+                    'CAISO_Conventional_DR':
+                pass
+            elif int(rows_list[row][7-1]):  # must-run flag
+                pass
+            # If Pmax=Pmin, we're modeling as must-run, so no startups
+            elif float(rows_list[row][17-1]) == 1:
+                pass
+            else:
+                # Note: the key is the startup type id
+                # Startup costs are divided by 2 in Inputs2Write
+                startup_chars = {1: (float(rows_list[row][21-1]),
+                                     min(float(rows_list[row][18 - 1]), 1.0),
+                                     float(rows_list[row][22-1])/2.,
+                                     ".")}
+                startup_char_dict[project] = {1: startup_chars}  # 1 is scen id
+
+    # Add GridPath split projects
+        startup_char_dict["CAISO_Peaker1_Planned"] = \
+            startup_char_dict["CAISO_Peaker1"]
+        startup_char_dict["CAISO_Peaker2_Planned"] = \
+            startup_char_dict["CAISO_Peaker2"]
+        startup_char_dict["CAISO_CCGT1_Planned"] = \
+            startup_char_dict["CAISO_CCGT1"]
+        startup_char_dict["CAISO_Reciprocating_Engine_Candidate"] = \
+            startup_char_dict["CAISO_Reciprocating_Engine"]
+
+    with open(os.path.join("cpuc_irp_data", "gridpath_specific",
+                           "gas_disagg_plants.csv"),
+              "r") as f:
+        reader = csv.reader(f, delimiter=",")
+        next(reader)
+        for row in reader:
+            if row[0].startswith('Battery') or row[0] == \
+                    'CAISO_Conventional_DR':
+                pass
+            elif row[18] == "must_run" or row[18] == "always_on":
+                pass
+            elif int(float(row[2])):
+                pass
+            else:
+                # Note: make sure down_times are set already!
+                # If there are none, set to zero or 1
+                down_time = c2.execute(
+                    """SELECT min_down_time_hours FROM 
+                    inputs_project_operational_chars
+                    WHERE project_operational_chars_scenario_id = 1
+                    AND project = '{}'""".format(row[0])
+                ).fetchone()[0]
+                startup_chars = {1: (down_time,
+                                     min(float(row[9]), 1),
+                                     float(row[7]),
+                                     ".")}
+                startup_char_dict[row[0]] = {1: startup_chars}
+
+    # 4. Update the table
+    project_operational_chars.update_project_startup_chars(
+        io, c2, startup_names, startup_char_dict
+    )
     io.commit()
 
     # ### Ramp rates ### #
@@ -2434,13 +2658,6 @@ def load_project_operational_chars():
     project_operational_chars.update_project_opchar_column(
         io=io, c=c2,
         project_operational_chars_scenario_id=1,
-        column="startup_plus_ramp_up_rate",
-        project_char=project_off_on_plus_ramp
-    )
-
-    project_operational_chars.update_project_opchar_column(
-        io=io, c=c2,
-        project_operational_chars_scenario_id=1,
         column="shutdown_plus_ramp_down_rate",
         project_char=project_off_on_plus_ramp
     )
@@ -2463,13 +2680,11 @@ def load_project_operational_chars():
                 else:
                     c2.execute(
                         """UPDATE inputs_project_operational_chars
-                        SET startup_plus_ramp_up_rate = {},
-                        shutdown_plus_ramp_down_rate = {},
+                        SET shutdown_plus_ramp_down_rate = {},
                         ramp_up_when_on_rate = {},
                         ramp_down_when_on_rate = {}
                         WHERE project = '{}'
                         AND project_operational_chars_scenario_id = 1;""".format(
-                            1.0 if float(row[9]) > 1.0 else row[9],
                             1.0 if float(row[10]) > 1.0 else row[10],
                             1.0 if float(row[22]) > 1.0 else row[22],
                             1.0 if float(row[23]) > 1.0 else row[23],
@@ -2610,85 +2825,6 @@ def load_project_operational_chars():
         project_char=var_proj_lf_down_derate
         )
 
-    # ### Min up and down time ### #
-    project_min_up_down_time = dict()
-    with open(os.path.join("cpuc_irp_data", "csvs", "CONV_OpChar.csv"), "r") as f:
-        rows_list = list(csv.reader(f))
-        for row in range(8 - 1, 34):
-            if rows_list[row][3 - 1] == 'CAISO_Conventional_DR':
-                pass
-            # If Pmax=Pmin, we're modeling as must-run
-            elif float(rows_list[row][17 - 1]) == 1:
-                pass
-            # CAISO_Nuclear modeled as always-on
-            elif rows_list[row][3 - 1] == 'CAISO_Nuclear':
-                pass
-            else:
-                project_min_up_down_time[rows_list[row][3 - 1]] = \
-                    float(rows_list[row][21 - 1])
-
-    # Add GridPath split projects
-        project_min_up_down_time["CAISO_Peaker1_Planned"] = \
-            project_min_up_down_time["CAISO_Peaker1"]
-        project_min_up_down_time["CAISO_Peaker2_Planned"] = \
-            project_min_up_down_time["CAISO_Peaker2"]
-        project_min_up_down_time["CAISO_CCGT1_Planned"] = \
-            project_min_up_down_time["CAISO_CCGT1"]
-        project_min_up_down_time["CAISO_Reciprocating_Engine_Candidate"] = \
-            project_min_up_down_time["CAISO_Reciprocating_Engine"]
-
-    project_operational_chars.update_project_opchar_column(
-        io=io, c=c2,
-        project_operational_chars_scenario_id=1,
-        column="min_up_time_hours",
-        project_char=project_min_up_down_time
-    )
-
-    project_operational_chars.update_project_opchar_column(
-        io=io, c=c2,
-        project_operational_chars_scenario_id=1,
-        column="min_down_time_hours",
-        project_char=project_min_up_down_time
-    )
-    
-    # Add disaggregated gas projects
-    with open(os.path.join("cpuc_irp_data", "gridpath_specific",
-                           "gas_disagg_plants.csv"),
-              "r") as f:
-        reader = csv.reader(f, delimiter=",")
-        next(reader)
-        for row in reader:
-            if row[0].startswith('Battery'):
-                pass
-            else:
-                type = c2.execute(
-                    """SELECT operational_type FROM
-                    inputs_project_operational_chars
-                    WHERE project_operational_chars_scenario_id = 1
-                    AND project = '{}'""".format(row[0])
-                ).fetchone()[0]
-                if type == 'must_run':
-                    pass
-                else:
-                    tech = c2.execute(
-                        """SELECT technology FROM inputs_project_operational_chars
-                        WHERE project_operational_chars_scenario_id = 1
-                        AND project = '{}'""".format(row[0])
-                    ).fetchone()[0]
-
-                    c2.execute(
-                        """UPDATE inputs_project_operational_chars
-                        SET min_up_time_hours = {}, min_down_time_hours = {}
-                        WHERE project = '{}'
-                        AND project_operational_chars_scenario_id = 1;""".format(
-                            6.0 if tech == 'CCGT' else 1.0,
-                            6.0 if tech == 'CCGT' else 1.0,
-                            row[0]
-                        )
-                    )
-
-    io.commit()
-
     # ### Charging and discharging efficiency ### #
     proj_eff = {
         'CAISO_Existing_Pumped_Storage': 0.81**(1/2.0),
@@ -2786,6 +2922,7 @@ def load_project_operational_chars():
         "SELECT * FROM inputs_project_operational_chars WHERE project_operational_chars_scenario_id = 1;"
     ).fetchall()
 
+    # TODO: REMOVE STARTUP HERE
     for duration_min in [6, 8]:
         for row in opchar_scenario_4hmin:
             c2.execute(
@@ -2798,9 +2935,8 @@ def load_project_operational_chars():
                 heat_rate_curves_scenario_id = {},
                 min_stable_level = {},
                 unit_size_mw = {},
-                startup_cost_per_mw = {},
+                startup_chars_scenario_id = {},
                 shutdown_cost_per_mw = {},
-                startup_plus_ramp_up_rate = {},
                 shutdown_plus_ramp_down_rate = {},
                 ramp_up_when_on_rate = {},
                 ramp_down_when_on_rate = {},
@@ -2831,8 +2967,9 @@ def load_project_operational_chars():
                     'NULL' if row[5] is None else row[5],
                     'NULL' if row[6] is None else "'" + row[6] + "'",
                     'NULL',
+                    'NULL' if row[8] is None else row[8],
                     'NULL' if row[9] is None else row[9],
-                    'NULL' if row[10] is None else row[10],
+                    'NULL',
                     'NULL' if row[11] is None else row[11],
                     'NULL' if row[12] is None else row[12],
                     'NULL' if row[13] is None else row[13],
@@ -2842,9 +2979,9 @@ def load_project_operational_chars():
                     'NULL' if row[17] is None else row[17],
                     'NULL' if row[18] is None else row[18],
                     'NULL' if row[19] is None else row[19],
-                    'NULL' if row[20] is None else row[20],
                     duration_min if row[1].startswith('Battery_LCR')
-                    else ('NULL' if row[21] is None else row[21]),
+                    else ('NULL' if row[20] is None else row[20]),
+                    'NULL' if row[21] is None else row[21],
                     'NULL' if row[22] is None else row[22],
                     'NULL' if row[23] is None else row[23],
                     'NULL' if row[24] is None else row[24],
@@ -2858,7 +2995,6 @@ def load_project_operational_chars():
                     'NULL' if row[32] is None else row[32],
                     'NULL' if row[33] is None else row[33],
                     'NULL' if row[34] is None else row[34],
-                    'NULL' if row[35] is None else row[35],
                     2 if duration_min == 6 else 3,
                     row[1]
                 )
@@ -5665,7 +5801,7 @@ def load_project_new_costs():
 
 
 # TODO: some discrepancy between spreadsheet and IRP Staff proposal -- make
-# sure it's not a big issue
+#  sure it's not a big issue
 def load_project_new_potentials():
     """
     Max potentials for candidate projects

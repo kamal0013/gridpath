@@ -8461,7 +8461,7 @@ def transmission_operational_chars():
 def options_solver():
     c2.execute(
         """INSERT INTO options_solver_descriptions
-        (solver_options_id, solver, description)
+        (solver_options_id, name, description)
         VALUES (1, 'cplex', 'cplex, barrier, 4 threads');"""
     )
 

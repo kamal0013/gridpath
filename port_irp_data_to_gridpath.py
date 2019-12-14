@@ -134,10 +134,10 @@ def load_temporal_data():
                             horizon_weights_and_months[_day]["weight"]
                         subproblem_stage_timepoints[subproblem_id][
                             stage_id][timepoint][
-                            "previous_stage_timepoint_map"] = None
+                            "previous_stage_timepoint_map"] = 'NULL'
                         subproblem_stage_timepoints[subproblem_id][
                             stage_id][timepoint][
-                            "spinup_or_lookahead"] = None
+                            "spinup_or_lookahead"] = 'NULL'
                         subproblem_stage_timepoints[subproblem_id][
                             stage_id][timepoint]["month"] = \
                             int(horizon_weights_and_months[_day]["month"])
@@ -184,7 +184,6 @@ def load_temporal_data():
             subproblem_horizons=subproblem_horizons,
             subproblem_stage_timepoint_horizons=subproblem_stage_timepoint_horizons
     )
-
 
 def load_temporal_data_2030_only():
     """
@@ -286,10 +285,10 @@ def load_temporal_data_2030_only():
                             horizon_weights_and_months[_day]["weight"]
                         subproblem_stage_timepoints[subproblem_id][
                             stage_id][timepoint][
-                            "previous_stage_timepoint_map"] = None
+                            "previous_stage_timepoint_map"] = 'NULL'
                         subproblem_stage_timepoints[subproblem_id][
                             stage_id][timepoint][
-                            "spinup_or_lookahead"] = None
+                            "spinup_or_lookahead"] = 'NULL'
                         subproblem_stage_timepoints[subproblem_id][
                             stage_id][timepoint]["month"] = \
                             int(horizon_weights_and_months[_day]["month"])
@@ -338,161 +337,6 @@ def load_temporal_data_2030_only():
     )
 
 
-def load_temporal_data_2030_only_1horizon():
-    """
-    Add RESOLVE timepoints/days into database
-    Investment periods are 2030
-    Period is represented by just one horizon (day)
-    Discount factors and number of years represented are the same as in RESOLVE
-    (the GridPath discount_factor is the RESOLVE weighted divided by the
-    years in period)
-    Horizon boundary is circular
-
-    The point of this temporal scenario is to create a small toy model that
-    can be run very quickly.
-    :return:
-    """
-
-    # Make a dictionary with the discount factor and number of years
-    # represented for each investment period
-    periods = dict(dict())
-    with open(os.path.join("cpuc_irp_data", "csvs", "Lists.csv"), "r") as f:
-        rows_list = list(csv.reader(f))
-
-        for row in range(4 - 1, 7):
-            for column in range(32 - 1, 34):
-                periods[
-                    int(float(rows_list[row][32 - 1]))
-                ] = {}
-                periods[
-                    int(float(rows_list[row][32 - 1]))
-                ]["discount_factor"] = float(rows_list[row][33 - 1]) / \
-                          float(rows_list[row][34 - 1])
-                periods[
-                    int(float(rows_list[row][32 - 1]))
-                ]["number_years_represented"] = float(rows_list[row][34 - 1])
-
-    # Make a dictionary of horizons with their weights and months
-    # We'll also keep these in the RESOLVE database
-
-    c1.execute(
-        """DROP TABLE IF EXISTS resolve_days;"""
-    )
-    c1.execute(
-        """CREATE TABLE resolve_days(
-        day_id INTEGER PRIMARY KEY,
-        day_weight FLOAT,
-        month_of_year INTEGER,
-        hydro_year INTEGER
-        );"""
-    )
-
-    # Make dictionary for GridPath database
-    horizon_weights_and_months = dict()
-
-    for row in range(4 - 1, 40):
-        # Save in RESOLVE database
-        c1.execute(
-            """INSERT INTO resolve_days (day_id, day_weight,
-            month_of_year, hydro_year) VALUES ({}, {}, {}, {});""".format(
-                int(float(rows_list[row][15 - 1])), rows_list[row][16 - 1],
-                int(float(rows_list[row][17 - 1])),
-                int(float(rows_list[row][18 - 1]))
-            )
-        )
-
-        # Populate dictionary for GridPath database
-        for column in range(15 - 1, 17):
-            horizon_weights_and_months[
-                int(float(rows_list[row][15 - 1]))
-            ] = {}
-            horizon_weights_and_months[
-                int(float(rows_list[row][15 - 1]))
-            ]["weight"] = float(rows_list[row][16 - 1])
-            horizon_weights_and_months[
-                int(float(rows_list[row][15 - 1]))
-            ]["month"] = float(rows_list[row][17 - 1])
-
-    resolve.commit()
-
-    # Subproblems and stages (one subproblem, one stage)
-    subproblems = [1]
-    subproblem_stages = {sid: [(1, "single stage")] for sid in subproblems}
-
-    # Timepoints
-    subproblem_stage_timepoints = dict()
-    for subproblem_id in subproblem_stages.keys():
-        subproblem_stage_timepoints[subproblem_id] = dict()
-        for stage in subproblem_stages[subproblem_id]:
-            stage_id = stage[0]
-            subproblem_stage_timepoints[subproblem_id][stage_id] = dict()
-            for _period in [2030]:
-                _day = list(horizon_weights_and_months.keys())[0]
-                for hour in range(1, 25):
-                    timepoint = _period * 10**4 + _day * 10**2 + hour
-                    subproblem_stage_timepoints[subproblem_id][
-                        stage_id][timepoint] = dict()
-                    subproblem_stage_timepoints[subproblem_id][
-                        stage_id][timepoint]["period"] = _period
-                    subproblem_stage_timepoints[subproblem_id][
-                        stage_id][timepoint][
-                        "number_of_hours_in_timepoint"] = 1
-                    subproblem_stage_timepoints[subproblem_id][
-                        stage_id][timepoint]["timepoint_weight"] = 365
-                    subproblem_stage_timepoints[subproblem_id][
-                        stage_id][timepoint][
-                        "previous_stage_timepoint_map"] = 'NULL'
-                    subproblem_stage_timepoints[subproblem_id][
-                        stage_id][timepoint][
-                        "spinup_or_lookahead"] = 'NULL'
-                    subproblem_stage_timepoints[subproblem_id][
-                        stage_id][timepoint]["month"] = \
-                        int(horizon_weights_and_months[_day]["month"])
-                    subproblem_stage_timepoints[subproblem_id][
-                        stage_id][timepoint]["hour_of_day"] = hour
-
-    # Horizons
-    subproblem_horizons = dict()
-    for subproblem_id in subproblem_stages.keys():
-        subproblem_horizons[subproblem_id] = dict()
-        for period in [2030]:
-            day = list(horizon_weights_and_months.keys())[0]  # pick first day
-            horizon = period * 10**2 + day
-            subproblem_horizons[subproblem_id][horizon] = dict()
-            subproblem_horizons[subproblem_id][horizon]["period"] = period
-            subproblem_horizons[subproblem_id][horizon]["boundary"] = \
-                "circular"
-            subproblem_horizons[subproblem_id][horizon][
-                "balancing_type_horizon"] = "day"
-
-    # Timepoint horizons
-    subproblem_stage_timepoint_horizons = dict()
-    for subproblem_id in subproblem_stage_timepoints.keys():
-        subproblem_stage_timepoint_horizons[subproblem_id] = dict()
-        for stage_id in subproblem_stage_timepoints[subproblem_id].keys():
-            subproblem_stage_timepoint_horizons[subproblem_id][stage_id] = \
-                dict()
-            for timepoint in subproblem_stage_timepoints[subproblem_id][
-                    stage_id].keys():
-                subproblem_stage_timepoint_horizons[subproblem_id][
-                    stage_id][timepoint] = [(int(timepoint/10**2), 'day')]
-
-    # Load data into GridPath database
-    temporal.temporal(
-            io=io, c=c2,
-            temporal_scenario_id=3,
-            scenario_name="2030 only, 1 horizon",
-            scenario_description="2030 only; 1 RESOLVE day, "
-                                 "24 hours each",
-            periods={2030: periods[2030]},
-            subproblems=[1],
-            subproblem_stages={1: [(1, "single stage")]},
-            subproblem_stage_timepoints=subproblem_stage_timepoints,
-            subproblem_horizons=subproblem_horizons,
-            subproblem_stage_timepoint_horizons=subproblem_stage_timepoint_horizons
-    )
-
-
 def load_geography_load_zones():
     """
     Six load zones from the IRP
@@ -508,12 +352,12 @@ def load_geography_load_zones():
         scenario_description = '6 zones: CAISO, NW, SW, LDWP, BANC, IID',
         zones=['CAISO', 'NW', 'SW', 'LDWP', 'BANC', 'IID'],
         zone_overgen_penalties={
-            'CAISO': (1, 50000), 'NW': (1, 50000), 'SW': (1, 50000),
-            'LDWP': (1, 50000), 'BANC': (1, 50000), 'IID': (1, 50000)
+            'CAISO': 50000, 'NW': 50000, 'SW': 50000, 'LDWP': 50000,
+            'BANC': 50000, 'IID': 50000
         },
         zone_unserved_energy_penalties={
-            'CAISO': (1, 50000), 'NW': (1, 50000), 'SW': (1, 50000),
-            'LDWP': (1, 50000), 'BANC': (1, 50000), 'IID': (1, 50000)
+            'CAISO': 50000, 'NW': 50000, 'SW': 50000, 'LDWP': 50000,
+            'BANC': 50000, 'IID': 50000
         }
     )
 
@@ -531,7 +375,7 @@ def load_geography_lf_reserves_up_bas():
         scenario_name='default_caiso_only_pt2_reserve_to_energy_adj',
         scenario_description='CAISO only, no reserve-to-energy adjustment',
         bas=['CAISO'],
-        ba_penalties={'CAISO': (1, 10000)},
+        ba_penalties={'CAISO': 10000},
         reserve_to_energy_adjustments={'CAISO': 0.2}
     )
 
@@ -548,7 +392,7 @@ def load_geography_lf_reserves_down_bas():
         scenario_name='default_caiso_only_pt2_reserve_to_energy_adj',
         scenario_description='CAISO only, no reserve-to-energy adjustment',
         bas=['CAISO'],
-        ba_penalties={'CAISO': (1, 10000)},
+        ba_penalties={'CAISO': 10000},
         reserve_to_energy_adjustments={'CAISO': 0.2}
     )
 
@@ -565,7 +409,7 @@ def load_geography_regulation_up_bas():
         scenario_name='default_caiso_only_pt2_reserve_to_energy_adj',
         scenario_description='CAISO only, no reserve-to-energy adjustment',
         bas=['CAISO'],
-        ba_penalties={'CAISO': (1, 10000)},
+        ba_penalties={'CAISO': 10000},
         reserve_to_energy_adjustments={'CAISO': 0.2}
     )
 
@@ -582,7 +426,7 @@ def load_geography_regulation_down_bas():
         scenario_name='default_caiso_only_pt2_reserve_to_energy_adj',
         scenario_description='CAISO only, no reserve-to-energy adjustment',
         bas=['CAISO'],
-        ba_penalties={'CAISO': (1, 10000)},
+        ba_penalties={'CAISO': 10000},
         reserve_to_energy_adjustments={'CAISO': 0.2}
     )
 
@@ -599,7 +443,7 @@ def load_geography_spinning_reserves_bas():
         scenario_name='default_caiso_only_pt2_reserve_to_energy_adj',
         scenario_description='CAISO only, no reserve-to-energy adjustment',
         bas=['CAISO'],
-        ba_penalties={'CAISO': (1, 10000)},
+        ba_penalties={'CAISO': 10000},
         reserve_to_energy_adjustments={'CAISO': 0.2}
     )
 
@@ -616,7 +460,7 @@ def load_geography_frequency_response_bas():
         scenario_name='default_caiso_only_pt2_reserve_to_energy_adj',
         scenario_description='CAISO only, no reserve-to-energy adjustment',
         bas=['CAISO'],
-        ba_penalties={'CAISO': (1, 10000)},
+        ba_penalties={'CAISO': 10000},
         reserve_to_energy_adjustments={'CAISO': 0.2}
     )
 
@@ -631,8 +475,7 @@ def load_geography_rps_zones():
         rps_zone_scenario_id=1,
         scenario_name='caiso_rps',
         scenario_description='CAISO RPS only',
-        zones=['CAISO'],
-        zone_penalties={'CAISO': (0, 0)}
+        zones=['CAISO']
     )
 
 
@@ -646,8 +489,7 @@ def load_geography_carbon_cap_zones():
         carbon_cap_zone_scenario_id=defaults["carbon_cap_zone_scenario_id"],
         scenario_name='caiso_carbon_cap',
         scenario_description='CAISO carbon cap only',
-        zones=['CAISO'],
-        zone_penalties={'CAISO': (0, 0)}
+        zones=['CAISO']
     )
 
 
@@ -661,8 +503,7 @@ def load_geography_prm_zones():
         prm_zone_scenario_id=1,
         scenario_name='caiso_only_prm',
         scenario_description='CAISO PRM only',
-        zones=['CAISO'],
-        zone_penalties={'CAISO': (0, 0)}
+        zones=['CAISO']
     )
 
 
@@ -687,19 +528,12 @@ def load_geography_local_capacity_zones():
             'San_Diego',
             'Sierra',
             'Stockton'
-        ],
-        zone_penalties = {
-            'Bay_Area': (1, 1540000),
-            'Big_Creek_Ventura': (1, 1540000),
-            'Fresno': (1, 1540000),
-            'Humboldt': (1, 1540000),
-            'Kern': (1, 1540000),
-            'LA_Basin': (1, 1540000),
-            'NCNB': (1, 1540000),
-            'San_Diego': (1, 1540000),
-            'Sierra': (1, 1540000),
-            'Stockton': (1, 1540000)
-        }
+        ]
+    )
+
+    c2.execute(
+        """UPDATE inputs_geography_local_capacity_zones
+        SET local_capacity_violation_penalty_per_mw = 1540000;"""
     )
     io.commit()
 
@@ -1773,78 +1607,6 @@ def load_project_carbon_cap_zones():
     )
 
 
-def load_project_availability():
-    """
-
-    :return:
-    """
-    project_types_and_char_ids = dict()
-    all_projects = c2.execute(
-        "SELECT project FROM inputs_project_all;"
-    ).fetchall()
-    for prj in all_projects:
-        project_types_and_char_ids[prj[0]] = {}
-        project_types_and_char_ids[prj[0]]["type"] = "exogenous"
-        project_types_and_char_ids[prj[0]]["exogenous_availability_id"] = None
-        project_types_and_char_ids[prj[0]]["endogenous_availability_id"] = None
-
-    project_availability.make_scenario_and_insert_types_and_ids(
-        io=io, c=c2,
-        project_availability_scenario_id=1,
-        scenario_name="default",
-        scenario_description="Default availabilities.",
-        project_types_and_char_ids=project_types_and_char_ids
-    )
-
-    # Update the projects that are actually derated
-    project_avail_scenarios = {}
-
-    timepoints = c2.execute(
-        """SELECT timepoint, month FROM inputs_temporal_timepoints
-        WHERE temporal_scenario_id = {}
-        AND subproblem_id = {}
-        AND stage_id = {};""".format(1, 1, 1)
-    ).fetchall()
-
-    av_by_prj_month = OrderedDict()
-    with open(os.path.join("cpuc_irp_data", "csvs", "CONV_OpChar.csv"),
-              "r") as f:
-        rows_list = list(csv.reader(f))
-        for row in range(38 - 1, 44):
-            prj = rows_list[row][3 - 1]
-            c2.execute("""
-            UPDATE inputs_project_availability_types
-            SET exogenous_availability_scenario_id = 1
-            WHERE project = '{}';
-            """.format(prj))
-            av_by_prj_month[prj] = OrderedDict()
-            for column in range(6 - 1, 17):
-                month = int(float(rows_list[37 - 1][column]))
-                av_by_prj_month[prj][month] = float(rows_list[row][column])
-
-    avail_by_prj_tmp = OrderedDict()
-    for prj in av_by_prj_month.keys():
-        # exogenous_availability_scenario_id
-        project_avail_scenarios[prj] = {}
-        project_avail_scenarios[prj][1] = ("default", "default derate")
-
-        # Derates
-        avail_by_prj_tmp[prj] = OrderedDict()
-        avail_by_prj_tmp[prj][
-            1] = OrderedDict()  # exogenous_availability_scenario_id
-        avail_by_prj_tmp[prj][1][1] = OrderedDict()  # stage
-        for tmp_row in timepoints:
-            tmp = tmp_row[0]
-            month = tmp_row[1]
-            avail_by_prj_tmp[prj][1][1][tmp] = av_by_prj_month[prj][month]
-
-    project_availability.insert_project_availability_exogenous(
-        io=io, c=c2,
-        project_avail_scenarios=project_avail_scenarios,
-        project_avail=avail_by_prj_tmp
-    )
-
-
 def load_project_operational_chars():
     """
     Operational characteristics of projects
@@ -2600,7 +2362,7 @@ def load_project_operational_chars():
     ).fetchall()]
     var_proj_lf_down_derate = dict()
     for project in lf_reserves_down_projects:
-        if project_op_types[project] == 'variable':
+        if project_op_types[project] == 'gen_var':
             var_proj_lf_down_derate[project] = 0.5
 
     project_operational_chars.update_project_opchar_column(
@@ -2667,7 +2429,7 @@ def load_project_operational_chars():
                     WHERE project_operational_chars_scenario_id = 1
                     AND project = '{}'""".format(row[0])
                 ).fetchone()[0]
-                if type == 'must_run':
+                if type == 'gen_must_run':
                     pass
                 else:
                     tech = c2.execute(
@@ -2868,7 +2630,7 @@ def load_project_operational_chars():
 
 def load_project_variable_profiles():
     """
-    Profiles for 'variable' generators
+    Profiles for 'gen_var' generators
     :return:
     """
     td_losses = 0.0733  # for scaling customer PV profile
@@ -2912,7 +2674,7 @@ def load_project_hydro_opchar():
     Energy budget, min, and max by horizon for hydro projects
     :return:
     """
-    proj_capacities = dict()
+
     proj_opchar_names = dict()
     proj_horizon_chars = OrderedDict()
 
@@ -2920,11 +2682,6 @@ def load_project_hydro_opchar():
         # This will make a list of lists where each (sub)list is a row and
         # each element of the (sub)list is a column
         rows_list = list(csv.reader(f))
-
-        # Capacities
-        for column in range(5 - 1, 10):
-            proj_capacities[rows_list[4 - 1][column]] = \
-                float(rows_list[5 -1][column])
 
         # Hydro budgets
         for column in range(5 - 1, 10):
@@ -2948,8 +2705,7 @@ def load_project_hydro_opchar():
                     mwa = float(rows_list[row][column]) / 24  # MWh to MWa
                     proj_horizon_chars[proj][1]["day"][horizon]["period"] = \
                         period
-                    proj_horizon_chars[proj][1]["day"][horizon]["avg"] = \
-                        mwa / proj_capacities[proj]
+                    proj_horizon_chars[proj][1]["day"][horizon]["mwa"] = mwa
 
 
         # Min
@@ -2960,8 +2716,7 @@ def load_project_hydro_opchar():
                     day = int(float(rows_list[row][2 - 1]))
                     horizon = period * 10 ** 2 + day
                     min_mw = float(rows_list[row][column])
-                    proj_horizon_chars[proj][1]["day"][horizon]["min"] = \
-                        min_mw / proj_capacities[proj]
+                    proj_horizon_chars[proj][1]["day"][horizon]["min_mw"] = min_mw
         # Max
         for column in range(17 - 1, 22):
             proj = rows_list[14 - 1][column]
@@ -2970,14 +2725,55 @@ def load_project_hydro_opchar():
                     day = int(float(rows_list[row][2 - 1]))
                     horizon = period * 10 ** 2 + day
                     max_mw = float(rows_list[row][column])
-                    proj_horizon_chars[proj][1]["day"][horizon]["max"] = \
-                        max_mw / proj_capacities[proj]
+                    proj_horizon_chars[proj][1]["day"][horizon]["max_mw"] = max_mw
 
     # Insert data
     project_operational_chars.update_project_hydro_opchar(
             io=io, c=c2,
             proj_opchar_names=proj_opchar_names,
             proj_horizon_chars=proj_horizon_chars
+    )
+
+
+def load_project_availability():
+    """
+    Project availabilty
+    :return:
+    """
+    timepoints = c2.execute(
+        """SELECT timepoint, month FROM inputs_temporal_timepoints
+        WHERE temporal_scenario_id = {}
+        AND subproblem_id = {}
+        AND stage_id = {};""".format(1, 1, 1)
+    ).fetchall()
+
+    av_by_prj_month = OrderedDict()
+    with open(os.path.join("cpuc_irp_data", "csvs", "CONV_OpChar.csv"), "r") as f:
+        rows_list = list(csv.reader(f))
+        for row in range(38 - 1, 44):
+            prj = rows_list[row][3 - 1]
+            av_by_prj_month[prj] = OrderedDict()
+            for column in range(6 - 1, 17):
+                month = int(float(rows_list[37 - 1][column]))
+                av_by_prj_month[prj][month] = float(rows_list[row][column])
+
+    avail_by_prj_tmp = OrderedDict()
+    for prj in av_by_prj_month.keys():
+        avail_by_prj_tmp[prj] = OrderedDict()
+        avail_by_prj_tmp[prj][1] = OrderedDict()  # stage
+        for tmp_row in timepoints:
+            tmp = tmp_row[0]
+            month = tmp_row[1]
+            avail_by_prj_tmp[prj][1][tmp] = \
+                av_by_prj_month[prj][month]
+
+    project_availability.update_project_availability(
+        io=io, c=c2,
+        project_availability_scenario_id=1,
+        scenario_name='default_availability_schedules_for_nuclear_and_coal',
+        scenario_description='Default availability schedules for nuclear and '
+                             'coal',
+        project_avail=avail_by_prj_tmp
     )
 
 
@@ -6908,24 +6704,17 @@ def load_carbon_cap_targets():
 
             for column in range(5 - 1, 40):
                 period = int(float(rows_list[57 - 1][column]))
-                scenario_zone_period_targets[scenario]['CAISO'][period] = dict()
-                for subproblem in [1]:
-                    scenario_zone_period_targets[scenario]['CAISO'][
-                        period][subproblem] = dict()
-                    for stage in [1]:
-                        if scenario == 'Non_Binding':
-                            scenario_zone_period_targets[scenario]['CAISO'][
-                                period][subproblem][stage] \
-                                = 99
-                        else:
-                            # Apply specified imports adder and convert to MMT
-                            target = (float(rows_list[row][column])
-                                      + float(rows_list[69 - 1][column])) \
-                                     * 10**-6
+                if scenario == 'Non_Binding':
+                    scenario_zone_period_targets[scenario]['CAISO'][period] \
+                        = 99
+                else:
+                    # Apply specified imports adder and convert to MMT
+                    target = (float(rows_list[row][column])
+                              + float(rows_list[69 - 1][column])) \
+                             * 10**-6
 
-                            scenario_zone_period_targets[scenario]['CAISO'][
-                                period][subproblem][stage] = \
-                                target
+                    scenario_zone_period_targets[scenario]['CAISO'][period] = \
+                        target
 
     # From carbon_caps.xlsx
     additional_targets = {
@@ -7036,15 +6825,8 @@ def load_carbon_cap_targets():
         for zone in additional_targets[scenario].keys():
             scenario_zone_period_targets[scenario][zone] = OrderedDict()
             for period in additional_targets[scenario][zone].keys():
-                scenario_zone_period_targets[scenario][zone][period] = dict()
-                for subproblem in [1]:
-                    scenario_zone_period_targets[scenario][zone][period][
-                        subproblem] = dict()
-                    for stage in [1]:
-                        scenario_zone_period_targets[scenario][zone][
-                            period][subproblem][stage] = \
-                            additional_targets[scenario][zone][period]
-
+                scenario_zone_period_targets[scenario][zone][period] = \
+                    additional_targets[scenario][zone][period]
 
     # Insert data
     scenario_id = 1
@@ -7661,7 +7443,7 @@ def load_rps_targets():
     # )}
     # Make it non-zero to avoid division by 0 issues
     rps_0 = {
-        'CAISO': {yr: {1: {1: 100.0}} for yr in range(2015, 2050 + 1)}
+        'CAISO': {yr: 100.0 for yr in range(2015, 2050 + 1)}
     }
 
     rps_50 = {'CAISO': create_caiso_rps_target(
@@ -7862,22 +7644,18 @@ def create_caiso_rps_target(
 
     rps_target = OrderedDict()
     for year in range(2015, 2050 + 1):
-        rps_target[year] = OrderedDict()
-        for subproblem in [1]:
-            rps_target[year][subproblem] = OrderedDict()
-            for stage in [1]:
-                rps_target[year][subproblem][stage] = (
-                    baseline_forecast[year]
-                    + ev_forecast[year]
-                    + building_electrification_forecast[year]
-                    - energy_efficiency_forecast[year]
-                    - customer_pv_forecast[year]
-                    - other_self_gen_forecast[year]
-                    + tou_adjustment_forecast[year]
-                    - pumping_loads_forecast[year]
-                ) * rps_percent_target[year] \
-                    - nonmodeled_resources[year] \
-                    - rps_bank[year]
+        rps_target[year] = (
+            baseline_forecast[year]
+            + ev_forecast[year]
+            + building_electrification_forecast[year]
+            - energy_efficiency_forecast[year]
+            - customer_pv_forecast[year]
+            - other_self_gen_forecast[year]
+            + tou_adjustment_forecast[year]
+            - pumping_loads_forecast[year]
+        ) * rps_percent_target[year] \
+            - nonmodeled_resources[year] \
+            - rps_bank[year]
 
     return rps_target
 
@@ -8407,8 +8185,8 @@ def tuning():
     for subscenario in subscenarios:
         c2.execute(
             """INSERT INTO inputs_tuning
-            (tuning_scenario_id, import_carbon_tuning_cost_per_ton, 
-            ramp_tuning_cost_per_mw, dynamic_elcc_tuning_cost_per_mw)
+            (tuning_scenario_id, import_carbon_tuning_cost, 
+            ramp_tuning_cost, dynamic_elcc_tuning_cost)
             VALUES ({}, {}, {}, {});""".format(
                 subscenario[0], subscenario[3], subscenario[4], subscenario[5]
             )
@@ -8449,8 +8227,8 @@ def transmission_operational_chars():
         c2.execute(
             """INSERT INTO inputs_transmission_operational_chars
                (transmission_operational_chars_scenario_id,
-               transmission_line, operational_type)
-               VALUES ({}, '{}', 'tx_simple');""".format(
+               transmission_line)
+               VALUES ({}, '{}');""".format(
                 transmission_operational_chars_scenario_id,
                 tx_line[0]
             )
@@ -8461,7 +8239,7 @@ def transmission_operational_chars():
 def options_solver():
     c2.execute(
         """INSERT INTO options_solver_descriptions
-        (solver_options_id, name, description)
+        (solver_options_id, solver, description)
         VALUES (1, 'cplex', 'cplex, barrier, 4 threads');"""
     )
 
@@ -8559,7 +8337,6 @@ defaults = {
     "fuel_price_scenario_id": 5,  # 'Mid' fuel prices, 'Low' carbon adder
     "project_new_cost_scenario_id": 1,
     "project_new_potential_scenario_id": 7,  # DRECP/SJV w LCR proj limits
-    "project_new_binary_build_size_scenario_id": None,
     "transmission_portfolio_scenario_id": 1,
     "transmission_load_zone_scenario_id": 1,
     "transmission_existing_capacity_scenario_id": 1,
@@ -8580,7 +8357,7 @@ defaults = {
     "prm_requirement_scenario_id": 1,
     "elcc_surface_scenario_id": 1,
     "local_capacity_requirement_scenario_id": 1,
-    "tuning_scenario_id": None,
+    "tuning_scenario_id": 'NULL',
     "solver_options_id": 1
 }
 
@@ -8673,8 +8450,6 @@ def create_base_scenarios():
         project_new_cost_scenario_id=defaults["project_new_cost_scenario_id"],
         project_new_potential_scenario_id=
         defaults["project_new_potential_scenario_id"],
-        project_new_binary_build_size_scenario_id=
-        defaults["project_new_binary_build_size_scenario_id"],
         transmission_portfolio_scenario_id=
         defaults["transmission_portfolio_scenario_id"],
         transmission_load_zone_scenario_id=
@@ -8793,8 +8568,6 @@ def create_base_scenarios():
         project_new_cost_scenario_id=defaults["project_new_cost_scenario_id"],
         project_new_potential_scenario_id=
         defaults["project_new_potential_scenario_id"],
-        project_new_binary_build_size_scenario_id=
-        defaults["project_new_binary_build_size_scenario_id"],
         transmission_portfolio_scenario_id=
         defaults["transmission_portfolio_scenario_id"],
         transmission_load_zone_scenario_id=
@@ -8912,8 +8685,6 @@ def create_base_scenarios():
         project_new_cost_scenario_id=defaults["project_new_cost_scenario_id"],
         project_new_potential_scenario_id=
         defaults["project_new_potential_scenario_id"],
-        project_new_binary_build_size_scenario_id=
-        defaults["project_new_binary_build_size_scenario_id"],
         transmission_portfolio_scenario_id=
         defaults["transmission_portfolio_scenario_id"],
         transmission_load_zone_scenario_id=
@@ -9030,8 +8801,6 @@ def create_base_scenarios():
         project_new_cost_scenario_id=defaults["project_new_cost_scenario_id"],
         project_new_potential_scenario_id=
         defaults["project_new_potential_scenario_id"],
-        project_new_binary_build_size_scenario_id=
-        defaults["project_new_binary_build_size_scenario_id"],
         transmission_portfolio_scenario_id=
         defaults["transmission_portfolio_scenario_id"],
         transmission_load_zone_scenario_id=
@@ -9106,7 +8875,7 @@ def create_base_scenarios():
         rps_zone_scenario_id=defaults["rps_zone_scenario_id"],
         carbon_cap_zone_scenario_id=defaults["carbon_cap_zone_scenario_id"],
         prm_zone_scenario_id=defaults["prm_zone_scenario_id"],
-        local_capacity_zone_scenario_id=None,
+        local_capacity_zone_scenario_id='NULL',
         project_portfolio_scenario_id=14,
         project_operational_chars_scenario_id=
         defaults["project_operational_chars_scenario_id"],
@@ -9135,8 +8904,8 @@ def create_base_scenarios():
         defaults["project_elcc_chars_scenario_id"],
         prm_energy_only_scenario_id=
         defaults["prm_energy_only_scenario_id"],
-        project_local_capacity_zone_scenario_id=None,
-        project_local_capacity_chars_scenario_id=None,
+        project_local_capacity_zone_scenario_id='NULL',
+        project_local_capacity_chars_scenario_id='NULL',
         project_existing_capacity_scenario_id=
         defaults["project_existing_capacity_scenario_id"],
         project_existing_fixed_cost_scenario_id=
@@ -9145,8 +8914,6 @@ def create_base_scenarios():
         project_new_cost_scenario_id=defaults["project_new_cost_scenario_id"],
         project_new_potential_scenario_id=
         defaults["project_new_potential_scenario_id"],
-        project_new_binary_build_size_scenario_id=
-        defaults["project_new_binary_build_size_scenario_id"],
         transmission_portfolio_scenario_id=
         defaults["transmission_portfolio_scenario_id"],
         transmission_load_zone_scenario_id=
@@ -9177,7 +8944,7 @@ def create_base_scenarios():
         carbon_cap_target_scenario_id=2,
         prm_requirement_scenario_id=defaults["prm_requirement_scenario_id"],
         elcc_surface_scenario_id=defaults["elcc_surface_scenario_id"],
-        local_capacity_requirement_scenario_id=None,
+        local_capacity_requirement_scenario_id='NULL',
         tuning_scenario_id=defaults["tuning_scenario_id"],
         solver_options_id=defaults["solver_options_id"]
     )
@@ -9220,7 +8987,7 @@ def create_base_scenarios():
         rps_zone_scenario_id=defaults["rps_zone_scenario_id"],
         carbon_cap_zone_scenario_id=defaults["carbon_cap_zone_scenario_id"],
         prm_zone_scenario_id=defaults["prm_zone_scenario_id"],
-        local_capacity_zone_scenario_id=None,
+        local_capacity_zone_scenario_id='NULL',
         project_portfolio_scenario_id=14,
         project_operational_chars_scenario_id=
         defaults["project_operational_chars_scenario_id"],
@@ -9247,10 +9014,10 @@ def create_base_scenarios():
         project_prm_zone_scenario_id=defaults["project_prm_zone_scenario_id"],
         project_elcc_chars_scenario_id=
         defaults["project_elcc_chars_scenario_id"],
-        project_local_capacity_chars_scenario_id=None,
+        project_local_capacity_chars_scenario_id='NULL',
         prm_energy_only_scenario_id=
         defaults["prm_energy_only_scenario_id"],
-        project_local_capacity_zone_scenario_id=None,
+        project_local_capacity_zone_scenario_id='NULL',
         project_existing_capacity_scenario_id=
         defaults["project_existing_capacity_scenario_id"],
         project_existing_fixed_cost_scenario_id=
@@ -9259,8 +9026,6 @@ def create_base_scenarios():
         project_new_cost_scenario_id=defaults["project_new_cost_scenario_id"],
         project_new_potential_scenario_id=
         defaults["project_new_potential_scenario_id"],
-        project_new_binary_build_size_scenario_id=
-        defaults["project_new_binary_build_size_scenario_id"],
         transmission_portfolio_scenario_id=
         defaults["transmission_portfolio_scenario_id"],
         transmission_load_zone_scenario_id=
@@ -9291,7 +9056,7 @@ def create_base_scenarios():
         carbon_cap_target_scenario_id=1,
         prm_requirement_scenario_id=defaults["prm_requirement_scenario_id"],
         elcc_surface_scenario_id=defaults["elcc_surface_scenario_id"],
-        local_capacity_requirement_scenario_id=None,
+        local_capacity_requirement_scenario_id='NULL',
         tuning_scenario_id=defaults["tuning_scenario_id"],
         solver_options_id=defaults["solver_options_id"]
     )
@@ -9334,7 +9099,7 @@ def create_base_scenarios():
         rps_zone_scenario_id=defaults["rps_zone_scenario_id"],
         carbon_cap_zone_scenario_id=defaults["carbon_cap_zone_scenario_id"],
         prm_zone_scenario_id=defaults["prm_zone_scenario_id"],
-        local_capacity_zone_scenario_id=None,
+        local_capacity_zone_scenario_id='NULL',
         project_portfolio_scenario_id=2,
         project_operational_chars_scenario_id=
         defaults["project_operational_chars_scenario_id"],
@@ -9363,8 +9128,8 @@ def create_base_scenarios():
         defaults["project_elcc_chars_scenario_id"],
         prm_energy_only_scenario_id=
         defaults["prm_energy_only_scenario_id"],
-        project_local_capacity_zone_scenario_id=None,
-        project_local_capacity_chars_scenario_id=None,
+        project_local_capacity_zone_scenario_id='NULL',
+        project_local_capacity_chars_scenario_id='NULL',
         project_existing_capacity_scenario_id=
         defaults["project_existing_capacity_scenario_id"],
         project_existing_fixed_cost_scenario_id=
@@ -9373,8 +9138,6 @@ def create_base_scenarios():
         project_new_cost_scenario_id=defaults["project_new_cost_scenario_id"],
         project_new_potential_scenario_id=
         defaults["project_new_potential_scenario_id"],
-        project_new_binary_build_size_scenario_id=
-        defaults["project_new_binary_build_size_scenario_id"],
         transmission_portfolio_scenario_id=
         defaults["transmission_portfolio_scenario_id"],
         transmission_load_zone_scenario_id=
@@ -9405,7 +9168,7 @@ def create_base_scenarios():
         carbon_cap_target_scenario_id=2,
         prm_requirement_scenario_id=defaults["prm_requirement_scenario_id"],
         elcc_surface_scenario_id=defaults["elcc_surface_scenario_id"],
-        local_capacity_requirement_scenario_id=None,
+        local_capacity_requirement_scenario_id='NULL',
         tuning_scenario_id=defaults["tuning_scenario_id"],
         solver_options_id=defaults["solver_options_id"]
     )
@@ -9448,7 +9211,7 @@ def create_base_scenarios():
         rps_zone_scenario_id=defaults["rps_zone_scenario_id"],
         carbon_cap_zone_scenario_id=defaults["carbon_cap_zone_scenario_id"],
         prm_zone_scenario_id=defaults["prm_zone_scenario_id"],
-        local_capacity_zone_scenario_id=None,
+        local_capacity_zone_scenario_id='NULL',
         project_portfolio_scenario_id=2,
         project_operational_chars_scenario_id=
         defaults["project_operational_chars_scenario_id"],
@@ -9475,10 +9238,10 @@ def create_base_scenarios():
         project_prm_zone_scenario_id=defaults["project_prm_zone_scenario_id"],
         project_elcc_chars_scenario_id=
         defaults["project_elcc_chars_scenario_id"],
-        project_local_capacity_chars_scenario_id=None,
+        project_local_capacity_chars_scenario_id='NULL',
         prm_energy_only_scenario_id=
         defaults["prm_energy_only_scenario_id"],
-        project_local_capacity_zone_scenario_id=None,
+        project_local_capacity_zone_scenario_id='NULL',
         project_existing_capacity_scenario_id=
         defaults["project_existing_capacity_scenario_id"],
         project_existing_fixed_cost_scenario_id=
@@ -9487,8 +9250,6 @@ def create_base_scenarios():
         project_new_cost_scenario_id=defaults["project_new_cost_scenario_id"],
         project_new_potential_scenario_id=
         defaults["project_new_potential_scenario_id"],
-        project_new_binary_build_size_scenario_id=
-        defaults["project_new_binary_build_size_scenario_id"],
         transmission_portfolio_scenario_id=
         defaults["transmission_portfolio_scenario_id"],
         transmission_load_zone_scenario_id=
@@ -9519,7 +9280,7 @@ def create_base_scenarios():
         carbon_cap_target_scenario_id=1,
         prm_requirement_scenario_id=defaults["prm_requirement_scenario_id"],
         elcc_surface_scenario_id=defaults["elcc_surface_scenario_id"],
-        local_capacity_requirement_scenario_id=None,
+        local_capacity_requirement_scenario_id='NULL',
         tuning_scenario_id=defaults["tuning_scenario_id"],
         solver_options_id=defaults["solver_options_id"]
     )
@@ -9562,7 +9323,7 @@ def create_base_scenarios():
         rps_zone_scenario_id=defaults["rps_zone_scenario_id"],
         carbon_cap_zone_scenario_id=defaults["carbon_cap_zone_scenario_id"],
         prm_zone_scenario_id=defaults["prm_zone_scenario_id"],
-        local_capacity_zone_scenario_id=None,
+        local_capacity_zone_scenario_id='NULL',
         project_portfolio_scenario_id=5,
         project_operational_chars_scenario_id=
         defaults["project_operational_chars_scenario_id"],
@@ -9591,8 +9352,8 @@ def create_base_scenarios():
         defaults["project_elcc_chars_scenario_id"],
         prm_energy_only_scenario_id=
         defaults["prm_energy_only_scenario_id"],
-        project_local_capacity_zone_scenario_id=None,
-        project_local_capacity_chars_scenario_id=None,
+        project_local_capacity_zone_scenario_id='NULL',
+        project_local_capacity_chars_scenario_id='NULL',
         project_existing_capacity_scenario_id=
         defaults["project_existing_capacity_scenario_id"],
         project_existing_fixed_cost_scenario_id=
@@ -9601,8 +9362,6 @@ def create_base_scenarios():
         project_new_cost_scenario_id=defaults["project_new_cost_scenario_id"],
         project_new_potential_scenario_id=
         defaults["project_new_potential_scenario_id"],
-        project_new_binary_build_size_scenario_id=
-        defaults["project_new_binary_build_size_scenario_id"],
         transmission_portfolio_scenario_id=
         defaults["transmission_portfolio_scenario_id"],
         transmission_load_zone_scenario_id=
@@ -9633,7 +9392,7 @@ def create_base_scenarios():
         carbon_cap_target_scenario_id=2,
         prm_requirement_scenario_id=defaults["prm_requirement_scenario_id"],
         elcc_surface_scenario_id=defaults["elcc_surface_scenario_id"],
-        local_capacity_requirement_scenario_id=None,
+        local_capacity_requirement_scenario_id='NULL',
         tuning_scenario_id=defaults["tuning_scenario_id"],
         solver_options_id=defaults["solver_options_id"]
     )
@@ -9676,7 +9435,7 @@ def create_base_scenarios():
         rps_zone_scenario_id=defaults["rps_zone_scenario_id"],
         carbon_cap_zone_scenario_id=defaults["carbon_cap_zone_scenario_id"],
         prm_zone_scenario_id=defaults["prm_zone_scenario_id"],
-        local_capacity_zone_scenario_id=None,
+        local_capacity_zone_scenario_id='NULL',
         project_portfolio_scenario_id=5,
         project_operational_chars_scenario_id=
         defaults["project_operational_chars_scenario_id"],
@@ -9703,10 +9462,10 @@ def create_base_scenarios():
         project_prm_zone_scenario_id=defaults["project_prm_zone_scenario_id"],
         project_elcc_chars_scenario_id=
         defaults["project_elcc_chars_scenario_id"],
-        project_local_capacity_chars_scenario_id=None,
+        project_local_capacity_chars_scenario_id='NULL',
         prm_energy_only_scenario_id=
         defaults["prm_energy_only_scenario_id"],
-        project_local_capacity_zone_scenario_id=None,
+        project_local_capacity_zone_scenario_id='NULL',
         project_existing_capacity_scenario_id=
         defaults["project_existing_capacity_scenario_id"],
         project_existing_fixed_cost_scenario_id=
@@ -9715,8 +9474,6 @@ def create_base_scenarios():
         project_new_cost_scenario_id=defaults["project_new_cost_scenario_id"],
         project_new_potential_scenario_id=
         defaults["project_new_potential_scenario_id"],
-        project_new_binary_build_size_scenario_id=
-        defaults["project_new_binary_build_size_scenario_id"],
         transmission_portfolio_scenario_id=
         defaults["transmission_portfolio_scenario_id"],
         transmission_load_zone_scenario_id=
@@ -9747,7 +9504,7 @@ def create_base_scenarios():
         carbon_cap_target_scenario_id=1,
         prm_requirement_scenario_id=defaults["prm_requirement_scenario_id"],
         elcc_surface_scenario_id=defaults["elcc_surface_scenario_id"],
-        local_capacity_requirement_scenario_id=None,
+        local_capacity_requirement_scenario_id='NULL',
         tuning_scenario_id=defaults["tuning_scenario_id"],
         solver_options_id=defaults["solver_options_id"]
     )
@@ -9834,8 +9591,6 @@ def create_base_scenarios():
         project_new_cost_scenario_id=defaults["project_new_cost_scenario_id"],
         project_new_potential_scenario_id=
         defaults["project_new_potential_scenario_id"],
-        project_new_binary_build_size_scenario_id=
-        defaults["project_new_binary_build_size_scenario_id"],
         transmission_portfolio_scenario_id=
         defaults["transmission_portfolio_scenario_id"],
         transmission_load_zone_scenario_id=
@@ -9952,8 +9707,6 @@ def create_base_scenarios():
         project_new_cost_scenario_id=defaults["project_new_cost_scenario_id"],
         project_new_potential_scenario_id=
         defaults["project_new_potential_scenario_id"],
-        project_new_binary_build_size_scenario_id=
-        defaults["project_new_binary_build_size_scenario_id"],
         transmission_portfolio_scenario_id=
         defaults["transmission_portfolio_scenario_id"],
         transmission_load_zone_scenario_id=
@@ -10069,8 +9822,6 @@ def create_base_scenarios():
         project_new_cost_scenario_id=defaults["project_new_cost_scenario_id"],
         project_new_potential_scenario_id=
         defaults["project_new_potential_scenario_id"],
-        project_new_binary_build_size_scenario_id=
-        defaults["project_new_binary_build_size_scenario_id"],
         transmission_portfolio_scenario_id=
         defaults["transmission_portfolio_scenario_id"],
         transmission_load_zone_scenario_id=
@@ -10186,8 +9937,6 @@ def create_base_scenarios():
         project_new_cost_scenario_id=defaults["project_new_cost_scenario_id"],
         project_new_potential_scenario_id=
         defaults["project_new_potential_scenario_id"],
-        project_new_binary_build_size_scenario_id=
-        defaults["project_new_binary_build_size_scenario_id"],
         transmission_portfolio_scenario_id=
         defaults["transmission_portfolio_scenario_id"],
         transmission_load_zone_scenario_id=
@@ -10303,8 +10052,6 @@ def create_base_scenarios():
         project_new_cost_scenario_id=defaults["project_new_cost_scenario_id"],
         project_new_potential_scenario_id=
         defaults["project_new_potential_scenario_id"],
-        project_new_binary_build_size_scenario_id=
-        defaults["project_new_binary_build_size_scenario_id"],
         transmission_portfolio_scenario_id=
         defaults["transmission_portfolio_scenario_id"],
         transmission_load_zone_scenario_id=
@@ -10420,8 +10167,6 @@ def create_base_scenarios():
         project_new_cost_scenario_id=defaults["project_new_cost_scenario_id"],
         project_new_potential_scenario_id=
         defaults["project_new_potential_scenario_id"],
-        project_new_binary_build_size_scenario_id=
-        defaults["project_new_binary_build_size_scenario_id"],
         transmission_portfolio_scenario_id=
         defaults["transmission_portfolio_scenario_id"],
         transmission_load_zone_scenario_id=
@@ -10498,7 +10243,7 @@ def create_2030_scenario():
         rps_zone_scenario_id=defaults["rps_zone_scenario_id"],
         carbon_cap_zone_scenario_id=defaults["carbon_cap_zone_scenario_id"],
         prm_zone_scenario_id=defaults["prm_zone_scenario_id"],
-        local_capacity_zone_scenario_id=None,
+        local_capacity_zone_scenario_id='NULL',
         project_portfolio_scenario_id=2,
         project_operational_chars_scenario_id=
         defaults["project_operational_chars_scenario_id"],
@@ -10527,8 +10272,8 @@ def create_2030_scenario():
         defaults["project_elcc_chars_scenario_id"],
         prm_energy_only_scenario_id=
         defaults["prm_energy_only_scenario_id"],
-        project_local_capacity_zone_scenario_id=None,
-        project_local_capacity_chars_scenario_id=None,
+        project_local_capacity_zone_scenario_id='NULL',
+        project_local_capacity_chars_scenario_id='NULL',
         project_existing_capacity_scenario_id=
         defaults["project_existing_capacity_scenario_id"],
         project_existing_fixed_cost_scenario_id=
@@ -10537,8 +10282,6 @@ def create_2030_scenario():
         project_new_cost_scenario_id=defaults["project_new_cost_scenario_id"],
         project_new_potential_scenario_id=
         defaults["project_new_potential_scenario_id"],
-        project_new_binary_build_size_scenario_id=
-        defaults["project_new_binary_build_size_scenario_id"],
         transmission_portfolio_scenario_id=
         defaults["transmission_portfolio_scenario_id"],
         transmission_load_zone_scenario_id=
@@ -10569,9 +10312,9 @@ def create_2030_scenario():
         carbon_cap_target_scenario_id=2,
         prm_requirement_scenario_id=defaults["prm_requirement_scenario_id"],
         elcc_surface_scenario_id=defaults["elcc_surface_scenario_id"],
-        local_capacity_requirement_scenario_id=None,
+        local_capacity_requirement_scenario_id='NULL',
         tuning_scenario_id=defaults["tuning_scenario_id"],
-        solver_options_id=None
+        solver_options_id='NULL'
     )
 
     # Create 'Base_30MMT_AggFleet_2030' scenario
@@ -10612,7 +10355,7 @@ def create_2030_scenario():
         rps_zone_scenario_id=defaults["rps_zone_scenario_id"],
         carbon_cap_zone_scenario_id=defaults["carbon_cap_zone_scenario_id"],
         prm_zone_scenario_id=defaults["prm_zone_scenario_id"],
-        local_capacity_zone_scenario_id=None,
+        local_capacity_zone_scenario_id='NULL',
         project_portfolio_scenario_id=2,
         project_operational_chars_scenario_id=
         defaults["project_operational_chars_scenario_id"],
@@ -10639,10 +10382,10 @@ def create_2030_scenario():
         project_prm_zone_scenario_id=defaults["project_prm_zone_scenario_id"],
         project_elcc_chars_scenario_id=
         defaults["project_elcc_chars_scenario_id"],
-        project_local_capacity_chars_scenario_id=None,
+        project_local_capacity_chars_scenario_id='NULL',
         prm_energy_only_scenario_id=
         defaults["prm_energy_only_scenario_id"],
-        project_local_capacity_zone_scenario_id=None,
+        project_local_capacity_zone_scenario_id='NULL',
         project_existing_capacity_scenario_id=
         defaults["project_existing_capacity_scenario_id"],
         project_existing_fixed_cost_scenario_id=
@@ -10651,8 +10394,6 @@ def create_2030_scenario():
         project_new_cost_scenario_id=defaults["project_new_cost_scenario_id"],
         project_new_potential_scenario_id=
         defaults["project_new_potential_scenario_id"],
-        project_new_binary_build_size_scenario_id=
-        defaults["project_new_binary_build_size_scenario_id"],
         transmission_portfolio_scenario_id=
         defaults["transmission_portfolio_scenario_id"],
         transmission_load_zone_scenario_id=
@@ -10683,123 +10424,9 @@ def create_2030_scenario():
         carbon_cap_target_scenario_id=1,
         prm_requirement_scenario_id=defaults["prm_requirement_scenario_id"],
         elcc_surface_scenario_id=defaults["elcc_surface_scenario_id"],
-        local_capacity_requirement_scenario_id=None,
+        local_capacity_requirement_scenario_id='NULL',
         tuning_scenario_id=defaults["tuning_scenario_id"],
-        solver_options_id=None
-    )
-
-    # Create 'Base_30MMT_AggFleet_2030_1horizon' scenario
-    scenario.create_scenario_all_args(
-        io=io, c=c2,
-        scenario_name="Base_30MMT_AggFleet_2030_1horizon",
-        of_fuels=defaults["of_fuels"],
-        of_multi_stage=defaults["of_multi_stage"],
-        of_transmission=defaults["of_transmission"],
-        of_transmission_hurdle_rates=defaults["of_transmission_hurdle_rates"],
-        of_simultaneous_flow_limits=defaults["of_simultaneous_flow_limits"],
-        of_lf_reserves_up=defaults["of_lf_reserves_up"],
-        of_lf_reserves_down=defaults["of_lf_reserves_down"],
-        of_regulation_up=defaults["of_regulation_up"],
-        of_regulation_down=defaults["of_regulation_down"],
-        of_frequency_response=defaults["of_frequency_response"],
-        of_spinning_reserves=defaults["of_spinning_reserves"],
-        of_rps=defaults["of_rps"],
-        of_carbon_cap=defaults["of_carbon_cap"],
-        of_track_carbon_imports=defaults["of_track_carbon_imports"],
-        of_prm=defaults["of_prm"],
-        of_local_capacity=0,
-        of_elcc_surface=defaults["of_elcc_surface"],
-        of_tuning=defaults["of_tuning"],
-        temporal_scenario_id=3,
-        load_zone_scenario_id=defaults["load_zone_scenario_id"],
-        lf_reserves_up_ba_scenario_id=
-        defaults["lf_reserves_up_ba_scenario_id"],
-        lf_reserves_down_ba_scenario_id=
-        defaults["lf_reserves_down_ba_scenario_id"],
-        regulation_up_ba_scenario_id=defaults["regulation_up_ba_scenario_id"],
-        regulation_down_ba_scenario_id=
-        defaults["regulation_down_ba_scenario_id"],
-        frequency_response_ba_scenario_id=
-        defaults["frequency_response_ba_scenario_id"],
-        spinning_reserves_ba_scenario_id=
-        defaults["spinning_reserves_ba_scenario_id"],
-        rps_zone_scenario_id=defaults["rps_zone_scenario_id"],
-        carbon_cap_zone_scenario_id=defaults["carbon_cap_zone_scenario_id"],
-        prm_zone_scenario_id=defaults["prm_zone_scenario_id"],
-        local_capacity_zone_scenario_id=None,
-        project_portfolio_scenario_id=2,
-        project_operational_chars_scenario_id=
-        defaults["project_operational_chars_scenario_id"],
-        project_availability_scenario_id=
-        defaults["project_availability_scenario_id"],
-        fuel_scenario_id=defaults["fuel_scenario_id"],
-        project_load_zone_scenario_id=
-        defaults["project_load_zone_scenario_id"],
-        project_lf_reserves_up_ba_scenario_id=
-        defaults["project_lf_reserves_up_ba_scenario_id"],
-        project_lf_reserves_down_ba_scenario_id=
-        defaults["project_lf_reserves_down_ba_scenario_id"],
-        project_regulation_up_ba_scenario_id=
-        defaults["project_regulation_up_ba_scenario_id"],
-        project_regulation_down_ba_scenario_id=
-        defaults["project_regulation_down_ba_scenario_id"],
-        project_frequency_response_ba_scenario_id=
-        defaults["project_frequency_response_ba_scenario_id"],
-        project_spinning_reserves_ba_scenario_id=
-        defaults["project_spinning_reserves_ba_scenario_id"],
-        project_rps_zone_scenario_id=defaults["project_rps_zone_scenario_id"],
-        project_carbon_cap_zone_scenario_id=
-        defaults["carbon_cap_zone_scenario_id"],
-        project_prm_zone_scenario_id=defaults["project_prm_zone_scenario_id"],
-        project_elcc_chars_scenario_id=
-        defaults["project_elcc_chars_scenario_id"],
-        project_local_capacity_chars_scenario_id=None,
-        prm_energy_only_scenario_id=
-        defaults["prm_energy_only_scenario_id"],
-        project_local_capacity_zone_scenario_id=None,
-        project_existing_capacity_scenario_id=
-        defaults["project_existing_capacity_scenario_id"],
-        project_existing_fixed_cost_scenario_id=
-        defaults["project_existing_fixed_cost_scenario_id"],
-        fuel_price_scenario_id=defaults["fuel_price_scenario_id"],
-        project_new_cost_scenario_id=defaults["project_new_cost_scenario_id"],
-        project_new_potential_scenario_id=
-        defaults["project_new_potential_scenario_id"],
-        project_new_binary_build_size_scenario_id=
-        defaults["project_new_binary_build_size_scenario_id"],
-        transmission_portfolio_scenario_id=
-        defaults["transmission_portfolio_scenario_id"],
-        transmission_load_zone_scenario_id=
-        defaults["transmission_load_zone_scenario_id"],
-        transmission_existing_capacity_scenario_id=
-        defaults["transmission_existing_capacity_scenario_id"],
-        transmission_operational_chars_scenario_id=
-        defaults["transmission_operational_chars_scenario_id"],
-        transmission_hurdle_rate_scenario_id=
-        defaults["transmission_hurdle_rate_scenario_id"],
-        transmission_carbon_cap_zone_scenario_id=
-        defaults["carbon_cap_zone_scenario_id"],
-        transmission_simultaneous_flow_limit_scenario_id=
-        defaults["transmission_simultaneous_flow_limit_scenario_id"],
-        transmission_simultaneous_flow_limit_line_group_scenario_id=
-        defaults[
-            "transmission_simultaneous_flow_limit_line_group_scenario_id"],
-        load_scenario_id=defaults["load_scenario_id"],
-        lf_reserves_up_scenario_id=defaults["lf_reserves_up_scenario_id"],
-        lf_reserves_down_scenario_id=defaults["lf_reserves_down_scenario_id"],
-        regulation_up_scenario_id=defaults["regulation_up_scenario_id"],
-        regulation_down_scenario_id=defaults["regulation_down_scenario_id"],
-        frequency_response_scenario_id=
-        defaults["frequency_response_scenario_id"],
-        spinning_reserves_scenario_id=
-        defaults["spinning_reserves_scenario_id"],
-        rps_target_scenario_id=defaults["rps_target_scenario_id"],
-        carbon_cap_target_scenario_id=1,
-        prm_requirement_scenario_id=defaults["prm_requirement_scenario_id"],
-        elcc_surface_scenario_id=defaults["elcc_surface_scenario_id"],
-        local_capacity_requirement_scenario_id=None,
-        tuning_scenario_id=defaults["tuning_scenario_id"],
-        solver_options_id=None
+        solver_options_id='NULL'
     )
 
 
@@ -10807,7 +10434,6 @@ if __name__ == "__main__":
     # ### Temporal ### #
     load_temporal_data()
     load_temporal_data_2030_only()
-    load_temporal_data_2030_only_1horizon()
 
     # ### Geography ### #
     load_geography_load_zones()
@@ -10838,7 +10464,7 @@ if __name__ == "__main__":
     load_project_operational_chars()  # operational characteristics
     load_project_variable_profiles()  # variable generator cap factors
     load_project_hydro_opchar()  # hydro operational characteristics
-    load_project_availability()  # project availability (i.e. maintenance)
+    load_project_availability()  # project availability (i.e. availability)
 
     load_fuels()  # fuels and fuel characteristics
     load_fuel_prices()  # fuel prices
@@ -10868,11 +10494,11 @@ if __name__ == "__main__":
     load_transmission_carbon_cap_zones()
     load_transmission_hurdle_rates()
 
-    # ### Policy ### #
+    # # ### Policy ### #
     load_carbon_cap_targets()
     load_rps_targets()
 
-    # ### Loads ### #
+    # # ### Loads ### #
     load_loads()
 
     # # ### Reserves ### #
@@ -10881,22 +10507,22 @@ if __name__ == "__main__":
     load_lf_requirement()
     load_frequency_response_requirement()
 
-    # ### PRM requirement ### #
+    # # ### PRM requirement ### #
     load_prm_requirement()
 
-    # ### Local capacity requirement ### #
+    # # ### Local capacity requirement ### #
     load_local_capacity_requirement()
 
-    # ### Tuning ### #
+    # # ### Tuning ### #
     tuning()
 
     # # ### Solver options ### # #
     options_solver()
 
-    # ### Hybridization costs ### #
+    # # # ### Hybridization costs ### #
     # hybridization_costs()
 
-    # ### Create scenarios ### #
+    # # # ### Create scenarios ### #
     create_base_scenarios()
     create_2030_scenario()
     # create_2x_aaee_scenarios()

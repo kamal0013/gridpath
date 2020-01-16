@@ -441,10 +441,10 @@ def load_temporal_data_2030_only_1horizon():
                         stage_id][timepoint]["timepoint_weight"] = 365
                     subproblem_stage_timepoints[subproblem_id][
                         stage_id][timepoint][
-                        "previous_stage_timepoint_map"] = 'NULL'
+                        "previous_stage_timepoint_map"] = None
                     subproblem_stage_timepoints[subproblem_id][
                         stage_id][timepoint][
-                        "spinup_or_lookahead"] = 'NULL'
+                        "spinup_or_lookahead"] = None
                     subproblem_stage_timepoints[subproblem_id][
                         stage_id][timepoint]["month"] = \
                         int(horizon_weights_and_months[_day]["month"])

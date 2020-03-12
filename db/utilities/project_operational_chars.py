@@ -5,6 +5,8 @@
 Project operational characteristics
 """
 from db.common_functions import spin_on_database_lock
+import sqlite3
+import numpy as np
 
 
 def make_scenario_and_insert_all_projects(
@@ -26,7 +28,7 @@ def make_scenario_and_insert_all_projects(
     subs_data = [(project_operational_chars_scenario_id, scenario_name,
                   scenario_description)]
     subs_sql = """
-        INSERT INTO subscenarios_project_operational_chars (
+        INSERT OR IGNORE INTO subscenarios_project_operational_chars (
         project_operational_chars_scenario_id, name,
         description) VALUES (?, ?, ?);
         """
@@ -38,7 +40,7 @@ def make_scenario_and_insert_all_projects(
     inputs_data = [(project_operational_chars_scenario_id, p[0])
                    for p in all_projects]
     inputs_sql = """
-        INSERT INTO inputs_project_operational_chars
+        INSERT OR IGNORE INTO inputs_project_operational_chars
         (project_operational_chars_scenario_id, project)
         VALUES (?, ?);
         """
@@ -159,7 +161,7 @@ def update_project_variable_profiles(
                  proj_profile_names[prj][scenario_id][1])
             )
     subs_sql = """
-        INSERT INTO subscenarios_project_variable_generator_profiles
+        INSERT OR IGNORE INTO subscenarios_project_variable_generator_profiles
         (project, variable_generator_profile_scenario_id, name, description)
         VALUES (?, ?, ?, ?);
         """
@@ -178,7 +180,7 @@ def update_project_variable_profiles(
                             proj_tmp_profiles[prj][scenario][stage][tmp])
                     )
     inputs_sql = """
-        INSERT INTO inputs_project_variable_generator_profiles
+        INSERT OR IGNORE INTO inputs_project_variable_generator_profiles
         (project, variable_generator_profile_scenario_id, stage_id,
         timepoint, cap_factor)
         VALUES (?, ?, ?, ?, ?);
@@ -215,7 +217,7 @@ def update_project_hydro_opchar(
                  proj_opchar_names[prj][scenario_id][1])
             )
     subs_sql = """
-        INSERT INTO subscenarios_project_hydro_operational_chars
+        INSERT OR IGNORE INTO subscenarios_project_hydro_operational_chars
         (project, hydro_operational_chars_scenario_id, name, description)
         VALUES (?, ?, ?, ?);
         """
@@ -235,7 +237,7 @@ def update_project_hydro_opchar(
                          proj_horizon_chars[p][scenario][bt][h]["max"])
                     )
     inputs_sql = """
-        INSERT INTO inputs_project_hydro_operational_chars
+        INSERT OR IGNORE INTO inputs_project_hydro_operational_chars
         (project, hydro_operational_chars_scenario_id, 
         balancing_type_project, horizon, period, 
         average_power_fraction, min_power_fraction, max_power_fraction)
@@ -264,14 +266,13 @@ def update_project_hr_curves(
     """
     # Subscenarios
     subs_data = []
-    for prj in proj_opchar_names.keys():
-        for scenario_id in proj_opchar_names[prj].keys():
-            subs_data.append(
-                (prj, scenario_id, proj_opchar_names[prj][scenario_id][0],
-                 proj_opchar_names[prj][scenario_id][1])
-            )
+    for prj, scenario_id in proj_opchar_names.keys():
+        subs_data.append(
+            (prj, scenario_id, proj_opchar_names[(prj, scenario_id)][0],
+             proj_opchar_names[(prj, scenario_id)][1])
+        )
     subs_sql = """
-        INSERT INTO subscenarios_project_heat_rate_curves
+        INSERT OR IGNORE INTO subscenarios_project_heat_rate_curves
         (project, heat_rate_curves_scenario_id, name, description)
         VALUES (?, ?, ?, ?);
         """
@@ -279,16 +280,15 @@ def update_project_hr_curves(
 
     # Insert data
     inputs_data = []
-    for p in list(proj_hr_chars.keys()):
-        for scenario in list(proj_hr_chars[p].keys()):
-            for hr_curve_point in list(proj_hr_chars[p][scenario].keys()):
-                inputs_data.append(
-                    (p, scenario,
-                     proj_hr_chars[p][scenario][hr_curve_point][0],
-                     proj_hr_chars[p][scenario][hr_curve_point][1])
-                )
+    for prj, scenario_id in list(proj_hr_chars.keys()):
+        for hr_curve_point in list(proj_hr_chars[(prj, scenario_id)].keys()):
+            inputs_data.append(
+                (prj, scenario_id,
+                 proj_hr_chars[(prj, scenario_id)][hr_curve_point][0],
+                 proj_hr_chars[(prj, scenario_id)][hr_curve_point][1])
+            )
     inputs_sql = """
-        INSERT INTO inputs_project_heat_rate_curves
+        INSERT OR IGNORE INTO inputs_project_heat_rate_curves
         (project, heat_rate_curves_scenario_id, load_point_mw, 
         average_heat_rate_mmbtu_per_mwh)
         VALUES (?, ?, ?, ?);
@@ -298,54 +298,39 @@ def update_project_hr_curves(
 
 def update_project_startup_chars(
         io, c,
-        proj_opchar_names,
-        proj_startup_chars
+        subscenario_data,
+        project_startup_chars
 ):
     """
     :param io:
     :param c:
-    :param proj_opchar_names: nested dictionary; top level key is the
-    project, second key is the startup_chars_scenario_id, the value is a
-    tuple with the name and description of startup_char scenario
-    :param proj_startup_chars: nested dictionary; top level key is the project,
-    second-level key is the startup_chars_scenario_id, the third-level
-    key is the down time cutoff and the value is the startup ramp rate.
+    :param subscenario_data: list of tuples with (project,
+    startup_chars_scenario_id, name, description) for each subscenario.
+    :param project_startup_chars: list of tuples with (project,
+    startup_chars_scenario_id, down_time_cutoff_hours,
+    startup_plus_ramp_up_rate, startup_cost_per_mw).
 
     :return:
     """
 
     # Subscenarios
-    subs_data = []
-    for prj in proj_opchar_names.keys():
-        for scenario_id in proj_opchar_names[prj].keys():
-            subs_data.append(
-                (prj, scenario_id, proj_opchar_names[prj][scenario_id][0],
-                 proj_opchar_names[prj][scenario_id][1])
-            )
     subs_sql = """
-        INSERT INTO subscenarios_project_startup_chars
+        INSERT OR IGNORE INTO subscenarios_project_startup_chars
         (project, startup_chars_scenario_id, name, description)
         VALUES (?, ?, ?, ?);
         """
-    spin_on_database_lock(conn=io, cursor=c, sql=subs_sql, data=subs_data)
+    spin_on_database_lock(conn=io, cursor=c, sql=subs_sql,
+                          data=subscenario_data)
 
     # Insert data
-    inputs_data = []
-    for p in list(proj_startup_chars.keys()):
-        for scenario in list(proj_startup_chars[p].keys()):
-            for dt_cutoff in list(proj_startup_chars[p][scenario].keys()):
-                inputs_data.append(
-                    (p, scenario, dt_cutoff,
-                     proj_startup_chars[p][scenario][dt_cutoff]
-                     )
-                )
     inputs_sql = """
-        INSERT INTO inputs_project_startup_chars
+        INSERT OR IGNORE INTO inputs_project_startup_chars
         (project, startup_chars_scenario_id, 
-        down_time_cutoff_hours, startup_plus_ramp_up_rate)
-        VALUES (?, ?, ?, ?);
+        down_time_cutoff_hours, startup_plus_ramp_up_rate, startup_cost_per_mw)
+        VALUES (?, ?, ?, ?, ?);
         """
-    spin_on_database_lock(conn=io, cursor=c, sql=inputs_sql, data=inputs_data)
+    spin_on_database_lock(conn=io, cursor=c, sql=inputs_sql,
+                          data=project_startup_chars)
 
 
 if __name__ == "__main__":

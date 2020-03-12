@@ -189,24 +189,21 @@ def load_project_hr_curves(io, c, subscenario_input, data_input):
         data_input_subscenario = data_input.loc[(data_input['heat_rate_curves_scenario_id'] == sc_id)]
 
         for prj in data_input_subscenario['project'].unique():
-            project_hr_scenarios[prj] = dict()
-            project_hr_scenarios[prj][sc_id] = (sc_name, sc_description)
+            project_hr_scenarios[(prj, sc_id)] = (sc_name, sc_description)
 
-            project_hr_chars[prj] = dict()
-            project_hr_chars[prj][sc_id] = dict()
+            project_hr_chars[(prj, sc_id)] = dict()
             project_hr_chars_by_project = data_input_subscenario.loc[data_input_subscenario['project'] == prj]
 
             for hr_curve_point in project_hr_chars_by_project['hr_curve_point'].to_list():
-                project_hr_chars[prj][sc_id][hr_curve_point] = dict()
-
-                project_hr_chars[prj][sc_id][hr_curve_point] = (float(project_hr_chars_by_project.loc[
-                                                                    project_hr_chars_by_project[
-                                                                        'hr_curve_point'] == hr_curve_point,
-                                                                    'load_point_mw'].iloc[0]),
-                                                                float(project_hr_chars_by_project.loc[
-                                                                    project_hr_chars_by_project[
-                                                                        'hr_curve_point'] == hr_curve_point,
-                                                                    'average_heat_rate_mmbtu_per_mwh'].iloc[0]))
+                project_hr_chars[(prj, sc_id)][hr_curve_point] = (float(
+                    project_hr_chars_by_project.loc[
+                        project_hr_chars_by_project[
+                            'hr_curve_point'] == hr_curve_point,
+                        'load_point_mw'].iloc[0]),
+                    float(project_hr_chars_by_project.loc[
+                        project_hr_chars_by_project[
+                            'hr_curve_point'] == hr_curve_point,
+                        'average_heat_rate_mmbtu_per_mwh'].iloc[0]))
 
     project_operational_chars.update_project_hr_curves(
         io=io, c=c,
@@ -217,46 +214,27 @@ def load_project_hr_curves(io, c, subscenario_input, data_input):
 
 def load_project_startup_chars(io, c, subscenario_input, data_input):
     """
-    Data output dictionary is {project:{startup_chars_scenario_id:{
-    down_time_cutoff_hours:
-    startup_plus_ramp_up_rate}}}
+    Data_input is a list of tuples (project, startup_chars_scenario_id,
+    down_time_cutoff_hours, startup_plus_ramp_up_rate, startup_cost_per_mw)
+
     :param io:
     :param c:
     :param subscenario_input:
-    :param data_input:
+    :param data_input: pd.DataFrame
     :return:
     """
 
-    project_su_chars = OrderedDict()
-    project_su_scenarios = OrderedDict()
+    subscenario_input.drop(["filename"], axis=1, inplace=True)
+    project_su_scenarios = [
+        tuple(x) for x in subscenario_input.to_records(index=False)
+    ]
 
-    for i in subscenario_input.index:
-        sc_id = int(subscenario_input['startup_chars_scenario_id'][i])
-        sc_name = subscenario_input['name'][i]
-        sc_description = subscenario_input['description'][i]
-
-        data_input_subscenario = data_input.loc[(data_input[
-                                                     'startup_chars_scenario_id'] == sc_id)]
-
-        for prj in data_input_subscenario['project'].unique():
-            project_su_scenarios[prj] = dict()
-            project_su_scenarios[prj][sc_id] = (sc_name, sc_description)
-
-            project_su_chars[prj] = dict()
-            project_su_chars[prj][sc_id] = dict()
-            project_su_chars_by_project = data_input_subscenario.loc[
-                data_input_subscenario['project'] == prj]
-
-            for dt_cutoff in project_su_chars_by_project[
-                'down_time_cutoff_hours'].to_list():
-                project_su_chars[prj][sc_id][dt_cutoff] = float(
-                    project_su_chars_by_project.loc[
-                        project_su_chars_by_project[
-                            'down_time_cutoff_hours'] == dt_cutoff,
-                        'startup_plus_ramp_up_rate'].iloc[0])
+    project_su_chars = [
+        tuple(x) for x in data_input.to_records(index=False)
+    ]
 
     project_operational_chars.update_project_startup_chars(
         io=io, c=c,
-        proj_opchar_names=project_su_scenarios,
-        proj_startup_chars=project_su_chars
+        subscenario_data=project_su_scenarios,
+        project_startup_chars=project_su_chars
     )

@@ -57,7 +57,7 @@ carbon_cap,system_carbon_cap_targets,0,1,policy/carbon_cap/system_carbon_cap_tar
 track_carbon_imports,transmission_carbon_cap_zones,0,1,policy/carbon_cap/track_carbon_imports/transmission_carbon_cap_zones,
 prm,geography_prm_zones,0,0,reliability/prm/geography_prm_zones,
 prm,project_prm_zones,0,0,reliability/prm/project_prm_zones,
-prm,project_elcc_chars,0,0,reliability/prm/elcc_surface/project_elcc_chars,
+prm,project_elcc_chars,0,0,reliability/prm/project_elcc_chars,
 prm,project_prm_energy_only,0,0,reliability/prm/project_prm_energy_only,not implemented yet in csvs import
 prm,system_prm_requirement,0,0,reliability/prm/system_prm_requirement,
 prm,system_prm_zone_elcc_surface,0,0,,not implemented yet in csvs import

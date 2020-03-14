@@ -1,2 +1,3 @@
 project_operational_chars_scenario_id,name,description,filename
-1,_base_project_operational_chars,Default operational chars for all projects,project_operational_chars_2zones
+1,base_project_operational_chars,Default operational chars for all projects,project_operational_chars_2zones
+2,base_project_opchar_month_balancing_types,Default operational chars for all projects but with month as balancing type,project_operational_chars_2zones_month_bt

@@ -1,0 +1,17 @@
+project,period,annual_fixed_cost_per_kw_year,annual_fixed_cost_per_kwh_year
+Coal_z1,2020,0,
+Coal_z1,2025,0,
+Gas_CCGT_z1,2020,0,
+Gas_CCGT_z1,2025,0,
+Gas_CT_z1,2020,0,
+Gas_CT_z1,2025,0,
+Wind_z1,2020,0,
+Wind_z1,2025,0,
+Hydro_z1,2020,0,
+Hydro_z1,2025,0,
+Gas_CCGT_z2,2020,0,
+Gas_CCGT_z2,2025,0,
+Nuclear_z2,2020,0,
+Nuclear_z2,2025,0,
+Battery_z2,2020,0,0
+Battery_z2,2025,0,0

@@ -158,12 +158,12 @@ def export_results(scenario_directory, subproblem, stage, m, d):
                 m.period[tmp],
                 m.horizon[tmp, m.balancing_type_project[p]],
                 tmp,
-                m.timepoint_weight[tmp],
-                m.number_of_hours_in_timepoint[tmp],
+                m.tmp_weight[tmp],
+                m.hrs_in_tmp[tmp],
                 m.load_zone[p],
                 m.technology[p],
                 value(m.Variable_OM_Cost[p, tmp]),
-                value(m.Fuel_Cost[p, tmp]) if p in m.FUEL_PROJECTS else 0,
+                value(m.Fuel_Cost[p, tmp]) if p in m.FUEL_PRJS else 0,
                 value(m.Startup_Cost[p, tmp]),
                 value(m.Shutdown_Cost[p, tmp])
             ])

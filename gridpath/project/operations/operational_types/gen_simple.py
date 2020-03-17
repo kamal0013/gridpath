@@ -247,7 +247,7 @@ def ramp_up_rule(mod, g, tmp):
     # ramp up the full operable range between timepoints, constraint won't
     # bind, so skip
     elif (mod.gen_simple_ramp_up_rate[g] * 60
-          * mod.number_of_hours_in_timepoint[mod.previous_timepoint[
+          * mod.hrs_in_tmp[mod.prev_tmp[
                 tmp, mod.balancing_type_project[g]]]
           >= 1):
         return Constraint.Skip
@@ -255,14 +255,14 @@ def ramp_up_rule(mod, g, tmp):
         return mod.GenSimple_Provide_Power_MW[g, tmp] \
             + mod.GenSimple_Upwards_Reserves_MW[g, tmp] \
             - (mod.GenSimple_Provide_Power_MW[
-                   g, mod.previous_timepoint[tmp, mod.balancing_type_project[g]]]
+                   g, mod.prev_tmp[tmp, mod.balancing_type_project[g]]]
                - mod.GenSimple_Downwards_Reserves_MW[
-                   g, mod.previous_timepoint[tmp, mod.balancing_type_project[
+                   g, mod.prev_tmp[tmp, mod.balancing_type_project[
                        g]]]) \
             <= \
             mod.gen_simple_ramp_up_rate[g] * 60 \
-            * mod.number_of_hours_in_timepoint[
-                   mod.previous_timepoint[tmp, mod.balancing_type_project[g]]] \
+            * mod.hrs_in_tmp[
+                   mod.prev_tmp[tmp, mod.balancing_type_project[g]]] \
             * mod.Capacity_MW[g, mod.period[tmp]] \
             * mod.Availability_Derate[g, tmp]
 
@@ -289,22 +289,22 @@ def ramp_down_rule(mod, g, tmp):
     # ramp down the full operable range between timepoints, constraint
     # won't bind, so skip
     elif (mod.gen_simple_ramp_down_rate[g] * 60
-          * mod.number_of_hours_in_timepoint[
-              mod.previous_timepoint[tmp, mod.balancing_type_project[g]]]
+          * mod.hrs_in_tmp[
+              mod.prev_tmp[tmp, mod.balancing_type_project[g]]]
           >= 1):
         return Constraint.Skip
     else:
         return mod.GenSimple_Provide_Power_MW[g, tmp] \
             - mod.GenSimple_Downwards_Reserves_MW[g, tmp] \
             - (mod.GenSimple_Provide_Power_MW[
-                   g, mod.previous_timepoint[tmp, mod.balancing_type_project[g]]]
+                   g, mod.prev_tmp[tmp, mod.balancing_type_project[g]]]
                + mod.GenSimple_Upwards_Reserves_MW[
-                   g, mod.previous_timepoint[tmp, mod.balancing_type_project[g]]]
+                   g, mod.prev_tmp[tmp, mod.balancing_type_project[g]]]
                ) \
             >= \
             - mod.gen_simple_ramp_down_rate[g] * 60 \
-            * mod.number_of_hours_in_timepoint[
-                   mod.previous_timepoint[tmp, mod.balancing_type_project[g]]] \
+            * mod.hrs_in_tmp[
+                   mod.prev_tmp[tmp, mod.balancing_type_project[g]]] \
             * mod.Capacity_MW[g, mod.period[tmp]] \
             * mod.Availability_Derate[g, tmp]
 
@@ -364,7 +364,7 @@ def fuel_burn_rule(mod, g, tmp, error_message):
     heat_rate_curves.tab, so the fuel burn slope is equal to the specified
     heat rate and the intercept is zero.
     """
-    if g in mod.FUEL_PROJECTS:
+    if g in mod.FUEL_PRJS:
         return mod.fuel_burn_slope_mmbtu_per_mwh[g, 0] \
             * mod.GenSimple_Provide_Power_MW[g, tmp]
     else:
@@ -402,7 +402,7 @@ def power_delta_rule(mod, g, tmp):
     else:
         return mod.GenSimple_Provide_Power_MW[g, tmp] - \
                mod.GenSimple_Provide_Power_MW[
-                   g, mod.previous_timepoint[tmp, mod.balancing_type_project[g]]
+                   g, mod.prev_tmp[tmp, mod.balancing_type_project[g]]
                ]
 
 

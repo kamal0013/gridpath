@@ -3,7 +3,7 @@ core,scenarios,1,1,scenarios,
 core,solver,1,1,solver,requires both solver options and description csvs
 core,temporal,1,1,temporal,"Tables include temporal_timepoints, temporal_periods, temporal_horizons, temporal_horizon_timepoints, temporal_subproblems, temporal_subproblems_stages"
 core,project_portfolios,1,1,project/project_portfolios,
-core,project_operational_chars,1,1,project/project_operational_chars,
+core,project_operational_chars,1,1,project/operational_chars,
 core,system_load,1,1,system_load/system_load,
 core,geography_load_zones,1,1,system_load/load_zones,
 core,project_load_zones,1,1,project/project_load_zones,
@@ -12,10 +12,10 @@ data_dependent,project_existing_fixed_cost,0,1,project/project_existing_fixed_co
 data_dependent,project_new_cost,0,1,project/project_new_cost,
 data_dependent,project_new_potential,0,1,project/project_new_potential,
 data_dependent,project_new_binary_build_size,0,0,project/project_new_binary_build_size,
-data_dependent,project_heat_rate_curves,0,1,project/project_heat_rate_curves,
-data_dependent,project_startup_chars,0,0,project/project_startup_chars,
-data_dependent,project_hydro_operational_chars,0,1,project/project_hydro_operational_chars,
-data_dependent,project_variable_generator_profiles,0,1,project/project_variable_generator_profiles,
+data_dependent,project_heat_rate_curves,0,1,project/operational_chars/heat_rate_curves,
+data_dependent,project_startup_chars,0,0,project/operational_chars/startup_chars,
+data_dependent,project_hydro_operational_chars,0,1,project/operational_chars/hydro_opchar,
+data_dependent,project_variable_generator_profiles,0,1,project/operational_chars/var_profiles,
 data_dependent,project_shiftable_load_supply_curve,0,0,,not implemented yet in csvs import
 data_dependent,project_availability_types,0,1,project/project_availability/project_availability_types,
 data_dependent,project_availability_endogenous,0,0,project/project_availability/project_availability_endogenous,

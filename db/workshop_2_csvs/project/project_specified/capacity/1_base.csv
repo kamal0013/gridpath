@@ -1,4 +1,4 @@
-project,period,existing_capacity_mw,existing_capacity_mwh
+project,period,specified_capacity_mw,specified_capacity_mwh
 Coal_z1,2020,500,
 Coal_z1,2025,500,
 Gas_CCGT_z1,2020,200,

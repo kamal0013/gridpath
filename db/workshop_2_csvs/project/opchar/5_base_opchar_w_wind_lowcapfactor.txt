@@ -1,0 +1,1 @@
+Default operational chars except for wind cap factor, which is 20 percent lower

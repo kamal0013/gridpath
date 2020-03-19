@@ -1,0 +1,1 @@
+Default operational chars except for coal minimum loading level (0.4 instead of 0.6).

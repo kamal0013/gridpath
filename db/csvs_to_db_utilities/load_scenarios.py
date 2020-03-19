@@ -9,6 +9,7 @@ from collections import OrderedDict
 
 from db.utilities import scenario
 
+
 def load_scenarios(io, c, data_input):
     """
     scenario dictionary

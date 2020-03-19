@@ -17,7 +17,7 @@ of_prm,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 of_elcc_surface,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 of_local_capacity,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 of_tuning,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-temporal_scenario_id,1,2,3,4,5,3,3,6,6,6,7,4,8,8,8
+temporal_scenario_id,1,2,3,4,5,3,3,6,6,6,7,8,8,8,8
 load_zone_scenario_id,1,1,1,1,1,1,1,1,2,1,1,1,2,1,2
 lf_reserves_up_ba_scenario_id,,,,,,,,,,,,,,,
 lf_reserves_down_ba_scenario_id,,,,,,,,,,,,,,,

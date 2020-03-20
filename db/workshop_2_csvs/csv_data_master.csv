@@ -18,7 +18,7 @@ project (data dependent),project_hydro_operational_chars,0,1,project/opchar/hydr
 project (data dependent),project_variable_generator_profiles,0,1,project/opchar/var_profiles,
 project (data dependent),project_shiftable_load_supply_curve,0,0,,not implemented yet in csvs import
 project (data dependent),project_availability_types,0,1,project/availability,
-project (data dependent),project_availability_endogenous,0,0,project/availability/endogenous,
+project (data dependent),project_availability_endogenous,0,1,project/availability/endogenous,
 project (data dependent),project_availability_exogenous,0,1,project/availability/exogenous,
 fuels,project_fuels,0,1,fuels/project_fuels,
 fuels,project_fuel_prices,0,1,fuels/project_fuel_prices,

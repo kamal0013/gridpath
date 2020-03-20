@@ -1,0 +1,15 @@
+project,availability_type,exogenous_availability_scenario_id,endogenous_availability_scenario_id
+Coal_z1,continuous,,1
+Gas_CCGT_z1,exogenous,,
+Gas_CT_z1,exogenous,,
+Wind_z1,exogenous,,
+Hydro_z1,exogenous,,
+Gas_CCGT_new_z1,exogenous,,
+Solar_new_z1,exogenous,,
+Gas_CCGT_z2,exogenous,,
+Nuclear_z2,exogenous,,
+Battery_z2,exogenous,,
+Gas_CT_new_z2,exogenous,,
+Solar_new_z2,exogenous,,
+Coal_unit1_z1,binary,,1
+Coal_unit2_z1,exogenous,,

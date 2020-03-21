@@ -18,7 +18,7 @@ of_elcc_surface,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 of_local_capacity,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 of_tuning,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 temporal_scenario_id,1,2,3,4,5,3,3,3,10,10,6,6,6,7,8,8,8,8,9
-load_zone_scenario_id,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,2,1,2,1
+load_zone_scenario_id,1,1,1,1,1,1,1,1,3,3,1,2,1,1,1,2,1,2,1
 lf_reserves_up_ba_scenario_id,,,,,,,,,,,,,,,,,,,
 lf_reserves_down_ba_scenario_id,,,,,,,,,,,,,,,,,,,
 regulation_up_ba_scenario_id,,,,,,,,,,,,,,,,,,,
@@ -74,5 +74,5 @@ prm_requirement_scenario_id,,,,,,,,,,,,,,,,,,,
 local_capacity_requirement_scenario_id,,,,,,,,,,,,,,,,,,,
 elcc_surface_scenario_id,,,,,,,,,,,,,,,,,,,
 tuning_scenario_id,,,,,,,,,,,,,,,,,,,
-solver_options_id,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+solver_options_id,1,1,1,1,1,1,1,1,2,2,1,1,1,1,1,1,1,1,1
 transmission_new_cost_scenario_id,,,,,,,,,,,,,,,,,,,

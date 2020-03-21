@@ -11,5 +11,5 @@ Nuclear_z2,exogenous,,
 Battery_z2,exogenous,,
 Gas_CT_new_z2,exogenous,,
 Solar_new_z2,exogenous,,
-Coal_unit1_z1,continuous,,1
+Coal_unit1_z1,binary,,1
 Coal_unit2_z1,exogenous,,

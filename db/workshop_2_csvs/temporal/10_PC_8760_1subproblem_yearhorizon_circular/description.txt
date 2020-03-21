@@ -1,0 +1,1 @@
+1 period; 1 subproblems; 1 year-long circular horizon; 8766 hour timepoints

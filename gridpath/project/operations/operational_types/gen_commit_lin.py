@@ -72,7 +72,7 @@ def add_module_specific_components(m, d):
     |                                                                         |
     | Three-dimensional set with generators of the :code:`gen_commit_lin`     |
     | operational type, their operational timepoints, and their fuel          |
-    | segments (if the project is in :code:`FUEL_PRJS`).                  |
+    | segments (if the project is in :code:`FUEL_PRJS`).                      |
     +-------------------------------------------------------------------------+
     | | :code:`GEN_COMMIT_LIN_OPR_TMPS_STR_TYPES`                             |
     |                                                                         |
@@ -491,9 +491,9 @@ def add_module_specific_components(m, d):
     )
 
     m.GEN_COMMIT_LIN_OPR_TMPS = Set(
-        dimen=2, within=m.PROJECT_OPERATIONAL_TIMEPOINTS,
+        dimen=2, within=m.PRJ_OPR_TMPS,
         rule=lambda mod:
-        set((g, tmp) for (g, tmp) in mod.PROJECT_OPERATIONAL_TIMEPOINTS
+        set((g, tmp) for (g, tmp) in mod.PRJ_OPR_TMPS
             if g in mod.GEN_COMMIT_LIN)
     )
 
@@ -518,7 +518,7 @@ def add_module_specific_components(m, d):
     m.GEN_COMMIT_LIN_OPR_TMPS_STR_TYPES = Set(
         dimen=3,
         rule=lambda mod:
-        set((g, tmp, s) for (g, tmp) in mod.PROJECT_OPERATIONAL_TIMEPOINTS
+        set((g, tmp, s) for (g, tmp) in mod.PRJ_OPR_TMPS
             for _g, s in mod.GEN_COMMIT_LIN_STR_RMP_PRJS_TYPES
             if g == _g)
     )

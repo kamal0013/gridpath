@@ -74,7 +74,7 @@ def add_module_specific_components(m, d):
     |                                                                         |
     | Three-dimensional set with generators of the :code:`gen_commit_cap`     |
     | operational type, their operational timepoints, and their fuel          |
-    | segments (if the project is in :code:`FUEL_PRJS`).                  |
+    | segments (if the project is in :code:`FUEL_PRJS`).                      |
     +-------------------------------------------------------------------------+
 
     |
@@ -353,9 +353,9 @@ def add_module_specific_components(m, d):
 
     m.GEN_COMMIT_CAP_OPR_TMPS = Set(
         dimen=2,
-        within=m.PROJECT_OPERATIONAL_TIMEPOINTS,
+        within=m.PRJ_OPR_TMPS,
         rule=lambda mod: set((g, tmp) for (g, tmp) in
-                             mod.PROJECT_OPERATIONAL_TIMEPOINTS if g in
+                             mod.PRJ_OPR_TMPS if g in
                              mod.GEN_COMMIT_CAP)
     )
 

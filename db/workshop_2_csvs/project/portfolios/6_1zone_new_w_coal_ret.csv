@@ -1,0 +1,8 @@
+project,existing,new_build,capacity_type
+Coal_z1,,,gen_ret_lin
+Gas_CCGT_z1,,,gen_spec
+Gas_CT_z1,,,gen_spec
+Wind_z1,,,gen_spec
+Hydro_z1,,,gen_spec
+Gas_CCGT_new_z1,,,gen_new_lin
+Solar_new_z1,,,gen_new_lin

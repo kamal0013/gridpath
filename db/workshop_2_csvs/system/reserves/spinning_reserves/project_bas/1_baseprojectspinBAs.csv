@@ -1,0 +1,9 @@
+project,spinning_reserves_ba
+Coal_z1,BA_spin1
+Gas_CCGT_z1,BA_spin1
+Gas_CT_z1,BA_spin1
+Hydro_z1,BA_spin1
+Gas_CCGT_new_z1,BA_spin1
+Gas_CCGT_z2,BA_spin2
+Battery_z2,BA_spin2
+Gas_CT_new_z2,BA_spin2

@@ -8,17 +8,17 @@ project_opchar,1,Generation and Storage Operational Characteristics
 fuels,1,Fuels
 transmission_capacity,1,Transmission Capacity
 transmission_opchar,1,Transmission Operational Characteristics
-transmission_hurdle_rates,1,Transmission Hurdle Rates
-transmission_sim_flow_limits,1,Transmission Simultaneous Flow Limits
-load_following_up,1,Load Following Up
-load_following_down,1,Load Following Down
-regulation_up,1,Regulation Up
-regulation_down,1,Regulation Down
+transmission_hurdle_rates,0,Transmission Hurdle Rates
+transmission_sim_flow_limits,0,Transmission Simultaneous Flow Limits
+load_following_up,0,Load Following Up
+load_following_down,0,Load Following Down
+regulation_up,0,Regulation Up
+regulation_down,0,Regulation Down
 spinning_reserves,1,Spinning Reserves
-frequency_response,1,Frequency Response
+frequency_response,0,Frequency Response
 rps,1,Renewables Portfolio Standard (RPS)
-carbon_cap,1,Carbon Cap
-prm,1,Planning Reserve Margin (PRM)
-local_capacity,1,Local Capacity
-tuning,1,Tuning
+carbon_cap,0,Carbon Cap
+prm,0,Planning Reserve Margin (PRM)
+local_capacity,0,Local Capacity
+tuning,0,Tuning
 solver,1,Solver Options

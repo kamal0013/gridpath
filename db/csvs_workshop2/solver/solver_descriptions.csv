@@ -1,0 +1,3 @@
+solver_options_id,name,description
+1,cbc,cbc
+2,glpk,glpk

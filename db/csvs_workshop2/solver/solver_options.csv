@@ -1,0 +1,3 @@
+solver_options_id,solver,solver_option_name,solver_option_value
+1,cbc,,
+2,glpk,,

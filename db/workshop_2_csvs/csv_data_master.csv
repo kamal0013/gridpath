@@ -22,12 +22,12 @@ project (data dependent),project_availability_endogenous,0,1,project/availabilit
 project (data dependent),project_availability_exogenous,0,1,project/availability/exogenous,
 fuels,project_fuels,0,1,project/fuels/chars,
 fuels,project_fuel_prices,0,1,project/fuels/prices,
-transmission,transmission_portfolios,0,1,transmission/transmission_portfolios,
-transmission,transmission_load_zones,0,1,transmission/transmission_load_zones,
-transmission,transmission_specified_capacity,0,1,transmission/transmission_existing_capacity,
-transmission,transmission_operational_chars,0,1,transmission/transmission_operational_chars,
-transmission,transmission_new_cost,0,1,transmission/transmission_new_cost,
-transmission_hurdle_rates,transmission_hurdle_rates,0,1,transmission/transmission_hurdle_rates,
+transmission,transmission_portfolios,0,1,transmission/portfolios,
+transmission,transmission_load_zones,0,1,transmission/load_zones,
+transmission,transmission_specified_capacity,0,1,transmission/cap_specified,
+transmission,transmission_operational_chars,0,1,transmission/opchar,
+transmission,transmission_new_cost,0,0,transmission/transmission_new_cost,
+transmission_hurdle_rates,transmission_hurdle_rates,0,0,transmission/transmission_hurdle_rates,
 simultaneous_flow_limits,transmission_simultaneous_flow_limits,0,0,transmission/transmission_simultaneous_flow_limits,not implemented yet in csvs import
 simultaneous_flow_limits,transmission_simultaneous_flow_limit_line_groups,0,0,transmission/transmission_simultaneous_flow_limits/transmission_simultaneous_flow_limits_line_groups,not implemented yet in csvs import
 lf_reserves_up,geography_lf_reserves_up_bas,0,0,system/reserves/lf_reserves_up/bas,

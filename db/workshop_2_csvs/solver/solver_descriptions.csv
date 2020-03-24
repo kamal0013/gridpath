@@ -2,3 +2,4 @@ solver_options_id,name,description
 1,cplex,"cplex, barrier, 4 threads"
 2,cplex,mipgap 5%
 3,cbc,cbc
+4,glpk,glpk

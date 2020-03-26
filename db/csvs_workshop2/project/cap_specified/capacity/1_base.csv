@@ -1,0 +1,6 @@
+project,period,specified_capacity_mw,specified_capacity_mwh
+Coal_z1,2020,500,
+Gas_CCGT_z1,2020,200,
+Gas_CT_z1,2020,100,
+Wind_z1,2020,300,
+Hydro_z1,2020,100,

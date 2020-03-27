@@ -1,0 +1,1 @@
+1 period; 2 subproblems; 1 day-long horizon per subproblem; stage 1 24 hours per horizon, stage 2 15-minute resolution

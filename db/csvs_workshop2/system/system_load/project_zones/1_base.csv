@@ -4,3 +4,5 @@ Gas_CCGT_z1,Zone1
 Gas_CT_z1,Zone1
 Wind_z1,Zone1
 Hydro_z1,Zone1
+Gas_CCGT_new_z1,Zone1
+Solar_new_z1,Zone1

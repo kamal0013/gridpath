@@ -1,0 +1,6 @@
+project,period,minimum_cumulative_new_build_mw,maximum_cumulative_new_build_mw,minimum_cumulative_new_build_mwh,maximum_cumulative_new_build_mwh
+Gas_CCGT_new_z1,2020,0,10000,,
+Gas_CCGT_new_z1,2025,0,10000,,
+Solar_new_z1,2020,0,500,,
+Solar_new_z1,2025,0,500,,
+,,,,,

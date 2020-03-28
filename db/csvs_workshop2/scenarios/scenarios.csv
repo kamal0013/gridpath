@@ -1,7 +1,7 @@
 optional_feature_or_subscenarios,PC_24hour,PC_8760_366subproblems_dayhorizons,PC_8760_1subproblems_dayhorizons,PC_8760_1subproblems_monthhorizons,PC_8760_1subproblems_yearmonthhorizons,PC_48hours_2subproblems_dayhorizons,PC_48hours_2subproblems_dayhorizons_2stages,PC_48hours_2subproblems_dayhorizons_2stages_spinup,PC_8760_366subproblems_dayhorizons_w_coallowpmin,PC_8760_366subproblems_dayhorizons_w_windlowcapfactor,CE_2periods_1day_per_month,CE_2periods_1day_per_month_lowsolarcost,CE_2periods_1day_per_month_coalretirement,CE_2zone
 of_fuels,1,1,1,1,1,1,1,1,1,1,1,1,1,1
 of_multi_stage,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-of_transmission,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+of_transmission,0,0,0,0,0,0,0,0,0,0,0,0,0,1
 of_transmission_hurdle_rates,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 of_simultaneous_flow_limits,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 of_lf_reserves_up,0,0,0,0,0,0,0,0,0,0,0,0,0,0

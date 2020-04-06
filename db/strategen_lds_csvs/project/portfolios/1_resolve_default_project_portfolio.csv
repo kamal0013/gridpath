@@ -170,3 +170,4 @@ CAISO_Shed_DR_Tranche5,,,gen_new_lin,1,0
 CAISO_Shed_DR_Tranche6,,,gen_new_lin,1,0
 CAISO_Shed_DR_Tranche7,,,gen_new_lin,1,0
 CAISO_Shed_DR_Tranche8,,,gen_new_lin,1,0
+CAISO_BTM_Li_Battery_Specified,,,stor_spec,0,0

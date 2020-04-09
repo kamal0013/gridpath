@@ -528,26 +528,26 @@ def energy_rule(mod, g, p):
 def min_duration_rule(mod, g, p):
     """
     **Constraint Name**: StorNewLin_Min_Duration_Constraint
-    **Enforced Over**: STOR_NEW_LIN_OPR_PRDS
+    **Enforced Over**: STOR_NEW_LIN_VNTS
 
     Storage duration must be above a pre-specified requirement in each
     operational period.
     """
-    return mod.StorNewLin_Energy_Capacity_MWh[g, p] \
-        >= mod.StorNewLin_Power_Capacity_MW[g, p] \
+    return mod.StorNewLin_Build_MWh[g, p] \
+        >= mod.StorNewLin_Build_MW[g, p] \
         * mod.stor_new_lin_min_duration_hrs[g]
 
 
 def max_duration_rule(mod, g, p):
     """
     **Constraint Name**: StorNewLin_Max_Duration_Constraint
-    **Enforced Over**: STOR_NEW_LIN_OPR_PRDS
+    **Enforced Over**: STOR_NEW_LIN_VNTS
 
     Storage duration must be below a pre-specified requirement in each
     operational period.
     """
-    return mod.StorNewLin_Energy_Capacity_MWh[g, p] \
-        <= mod.StorNewLin_Power_Capacity_MW[g, p] \
+    return mod.StorNewLin_Build_MWh[g, p] \
+        <= mod.StorNewLin_Build_MW[g, p] \
         * mod.stor_new_lin_max_duration_hrs[g]
 
 

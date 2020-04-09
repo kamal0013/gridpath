@@ -74,4 +74,4 @@ local_capacity_zone_scenario_id,
 project_local_capacity_zone_scenario_id,
 project_local_capacity_chars_scenario_id,
 tuning_scenario_id,
-solver_options_id,1
+solver_options_id,3

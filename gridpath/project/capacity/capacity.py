@@ -17,7 +17,7 @@ from builtins import str
 import csv
 import os.path
 import pandas as pd
-from pyomo.environ import Set, Expression, value, BuildAction
+from pyomo.environ import Set, Expression, value, BuildAction, Constraint
 
 from db.common_functions import spin_on_database_lock
 from gridpath.auxiliary.auxiliary import \
@@ -188,6 +188,19 @@ def add_model_components(m, d):
         m.STOR_OPR_PRDS,
         rule=energy_capacity_rule
     )
+
+
+    m.SOLAR_BUILD_LIMIT_PERIODS = Set(initialize=[2020, 2021, 2022, 2023])
+
+    def solar_build_limits_rule(mod, p):
+        return sum(
+            mod.GenNewLin_Build_MW[g, p] for g in mod.PROJECTS
+            if mod.technology[g] == "Solar"
+            and mod.capacity_type[g] == "gen_new_lin"
+        ) <= 2000
+    m.Solar_Build_Constraint = Constraint(m.SOLAR_BUILD_LIMIT_PERIODS,
+                                          rule=solar_build_limits_rule)
+
 
 
 # Set Rules

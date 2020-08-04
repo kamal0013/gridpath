@@ -24,11 +24,13 @@ Next steps:
  (cost tab, capacity tab, etc.)
  - after that, try and add some sort of customjs filter to a tab so we can
  figure out which zone we want to see for e.g. capacity results
+ this requires adding a columndatasource and some type of filtering!
  -
 """
 
 from argparse import ArgumentParser
 from bokeh.embed import json_item
+from bokeh.models import Tabs
 
 import pandas as pd
 import sys
@@ -192,10 +194,12 @@ def main(args=None):
     )
 
     cost_unit = "million " + get_unit(c, "cost")
+    power_unit = get_unit(c, "power")
 
     plot_title = "test"
     plot_name = "Dashboard"
 
+    # TODO: depending on selection, slice out load zone of interest
 
     cost_df = pd.DataFrame(
         data={'period': [2020, 2020, 2030, 2030, 2040, 2040],
@@ -208,12 +212,19 @@ def main(args=None):
               'shutdown_cost': [10, 0, 20, 0, 30, 20]
               }
     )
+    cost_df = pd.melt(
+        cost_df,
+        id_vars=['period', 'stage', 'load_zone'],
+        value_vars=['capacity_cost', 'fuel_cost', 'vom_cost',
+                    'startup_cost', 'shutdown_cost'],
+        var_name='Cost Component',
+        value_name='Cost ()'
+    )
+
     # cost_df = get_cost_data(
     #     conn=conn,
     #     scenario_id=scenario_id
     # )
-
-    print(cost_df.head())
 
     cap_df = pd.DataFrame(
         columns=['period', 'stage', 'load_zone', 'technology',
@@ -232,20 +243,36 @@ def main(args=None):
               [2040, 1, 'Zone2', 'Wind', 10, 40, 0, 0, 40]
               ]
     )
+
+    cost = create_stacked_bar_plot(
+        df=cost_df,
+        title=plot_title,
+        y_axis_column="Cost ()",
+        x_axis_column="period",
+        group_column="Cost Component",
+        column_mapper={"Cost ()": "Cost ({})".format(cost_unit),
+                       "period": "Period"},
+        ylimit=parsed_args.ylimit
+    )
+
+    cap = create_stacked_bar_plot(
+        df=cost_df,
+        title=plot_title,
+        y_axis_column="total_cap",  # TODO: allows this to change with select button
+        x_axis_column="period",
+        group_column="Technology",
+        column_mapper={"total_cap": "Capacity ({})".format(cap_unit),
+                       "period": "Period"},
+        ylimit=parsed_args.ylimit
+    )
+
+    print(cost_df.head())
     print(cap_df.head())
 
     tabs = Tabs(tabs=[cost, cap])
+    show(tabs)
 
-    # plot = create_stacked_bar_plot(
-    #     df=df,
-    #     title=plot_title,
-    #     y_axis_column="Cost (MW)",
-    #     x_axis_column="period",
-    #     group_column="Cost Component",
-    #     column_mapper={"Cost (MW)": "Cost ({})".format(cost_unit),
-    #                    "period": "Period"},
-    #     ylimit=parsed_args.ylimit
-    # )
+
     #
     # # Show plot in HTML browser file if requested
     # if parsed_args.show:
